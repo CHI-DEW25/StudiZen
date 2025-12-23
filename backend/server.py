@@ -325,7 +325,7 @@ async def logout(request: Request, response: Response):
 
 # ============ TASK ROUTES ============
 
-@api_router.post("/tasks", response_model=Task)
+@api_router.post("/tasks", response_model=Task, status_code=201)
 async def create_task(task_data: TaskCreate, current_user: dict = Depends(get_current_user)):
     task_id = f"task_{uuid.uuid4().hex[:12]}"
     task_doc = {
@@ -404,7 +404,7 @@ async def delete_task(task_id: str, current_user: dict = Depends(get_current_use
 
 # ============ POMODORO ROUTES ============
 
-@api_router.post("/pomodoro/start", response_model=PomodoroSession)
+@api_router.post("/pomodoro/start", response_model=PomodoroSession, status_code=201)
 async def start_pomodoro(session_data: PomodoroSessionCreate, current_user: dict = Depends(get_current_user)):
     session_id = f"pomo_{uuid.uuid4().hex[:12]}"
     session_doc = {
@@ -471,7 +471,7 @@ async def get_pomodoro_stats(current_user: dict = Depends(get_current_user)):
 
 # ============ GOALS ROUTES ============
 
-@api_router.post("/goals", response_model=Goal)
+@api_router.post("/goals", response_model=Goal, status_code=201)
 async def create_goal(goal_data: GoalCreate, current_user: dict = Depends(get_current_user)):
     goal_id = f"goal_{uuid.uuid4().hex[:12]}"
     goal_doc = {
