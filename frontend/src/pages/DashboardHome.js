@@ -87,37 +87,41 @@ const DashboardHome = () => {
       total: overview.tasks.total,
       icon: CheckCircle,
       color: 'text-emerald-500',
-      bgColor: 'bg-emerald-500/10',
+      bgColor: 'bg-gradient-to-br from-emerald-400/20 to-emerald-600/20',
+      iconBg: 'bg-gradient-to-br from-emerald-400 to-emerald-600',
     },
     {
       title: 'Focus Time',
       value: `${Math.round(overview.pomodoro.total_focus_time_minutes / 60)}h`,
       subtitle: 'this week',
       icon: Clock,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
+      color: 'text-violet-500',
+      bgColor: 'bg-gradient-to-br from-violet-400/20 to-violet-600/20',
+      iconBg: 'bg-gradient-to-br from-violet-400 to-violet-600',
     },
     {
       title: 'Active Goals',
       value: overview.goals.active,
       subtitle: `${overview.goals.completed} completed`,
       icon: Target,
-      color: 'text-amber',
-      bgColor: 'bg-amber/10',
+      color: 'text-amber-500',
+      bgColor: 'bg-gradient-to-br from-amber-400/20 to-amber-600/20',
+      iconBg: 'bg-gradient-to-br from-amber-400 to-amber-600',
     },
     {
       title: 'Productivity Score',
       value: `${overview.productivity_score}%`,
       icon: TrendingUp,
-      color: 'text-cyan',
-      bgColor: 'bg-cyan/10',
+      color: 'text-cyan-500',
+      bgColor: 'bg-gradient-to-br from-cyan-400/20 to-cyan-600/20',
+      iconBg: 'bg-gradient-to-br from-cyan-400 to-cyan-600',
     },
   ] : [];
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card/95 backdrop-blur border border-white/10 rounded-xl p-3 shadow-lg">
+        <div className="glass-card-strong rounded-xl p-3 shadow-lg">
           <p className="text-sm font-medium mb-1">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-xs text-muted-foreground">
@@ -144,7 +148,7 @@ const DashboardHome = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl md:text-4xl font-bold">
-            Welcome back, <span className="text-primary">{user?.name?.split(' ')[0] || 'Student'}</span>
+            Welcome back, <span className="text-gradient">{user?.name?.split(' ')[0] || 'Student'}</span>
           </h1>
           <p className="text-muted-foreground mt-1">
             Here's your productivity overview for today
@@ -153,7 +157,7 @@ const DashboardHome = () => {
         <Button
           onClick={fetchAiAdvice}
           disabled={isAiLoading}
-          className="rounded-xl glow-primary"
+          className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 shadow-lg shadow-violet-500/30"
           data-testid="get-ai-advice-btn"
         >
           {isAiLoading ? (
@@ -170,15 +174,15 @@ const DashboardHome = () => {
         {statCards.map((stat, index) => (
           <Card 
             key={index} 
-            className="bg-card/50 border-white/10 rounded-2xl hover:border-primary/30 transition-colors"
+            className="glass-card rounded-2xl card-hover border-0"
             data-testid={`stat-card-${stat.title.toLowerCase().replace(' ', '-')}`}
           >
             <CardContent className="p-6">
-              <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center mb-4`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+              <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center mb-4 shadow-lg`}>
+                <stat.icon className="w-6 h-6 text-white" />
               </div>
               <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-              <p className="text-2xl md:text-3xl font-bold font-mono">
+              <p className="text-2xl md:text-3xl font-bold font-mono text-foreground">
                 {stat.value}
                 {stat.total && (
                   <span className="text-muted-foreground text-lg">/{stat.total}</span>
@@ -195,7 +199,7 @@ const DashboardHome = () => {
       {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Chart Section */}
-        <Card className="lg:col-span-2 bg-card/50 border-white/10 rounded-2xl">
+        <Card className="lg:col-span-2 glass-card rounded-2xl border-0 card-hover">
           <CardHeader>
             <CardTitle className="font-heading text-lg">Focus Time This Week</CardTitle>
           </CardHeader>
@@ -205,18 +209,18 @@ const DashboardHome = () => {
                 <AreaChart data={dailyStats}>
                   <defs>
                     <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
                   <XAxis 
                     dataKey="day" 
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="rgba(0,0,0,0.4)"
                     fontSize={12}
                   />
                   <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="rgba(0,0,0,0.4)"
                     fontSize={12}
                   />
                   <Tooltip content={<CustomTooltip />} />
@@ -224,9 +228,9 @@ const DashboardHome = () => {
                     type="monotone"
                     dataKey="focus_time_minutes"
                     name="Focus (min)"
-                    stroke="hsl(var(--primary))"
+                    stroke="#8b5cf6"
                     fill="url(#focusGradient)"
-                    strokeWidth={2}
+                    strokeWidth={3}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -235,37 +239,40 @@ const DashboardHome = () => {
         </Card>
 
         {/* AI Coach Card */}
-        <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20 rounded-2xl">
-          <CardHeader>
+        <Card className="glass-card rounded-2xl border-0 card-hover overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-purple-500/10" />
+          <CardHeader className="relative">
             <CardTitle className="font-heading text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
               AI Study Coach
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="relative space-y-4">
             {aiAdvice ? (
               <>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {aiAdvice.advice}
                 </p>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-2 rounded-lg bg-background/50">
-                    <p className="text-lg font-bold text-primary">{aiAdvice.data_summary.tasks_completed}</p>
+                  <div className="text-center p-3 rounded-xl glass">
+                    <p className="text-lg font-bold text-violet-600">{aiAdvice.data_summary.tasks_completed}</p>
                     <p className="text-xs text-muted-foreground">Tasks</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-background/50">
-                    <p className="text-lg font-bold text-cyan">{aiAdvice.data_summary.focus_time_hours}h</p>
+                  <div className="text-center p-3 rounded-xl glass">
+                    <p className="text-lg font-bold text-cyan-600">{aiAdvice.data_summary.focus_time_hours}h</p>
                     <p className="text-xs text-muted-foreground">Focus</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-background/50">
-                    <p className="text-lg font-bold text-amber">{aiAdvice.data_summary.sessions_completed}</p>
+                  <div className="text-center p-3 rounded-xl glass">
+                    <p className="text-lg font-bold text-amber-600">{aiAdvice.data_summary.sessions_completed}</p>
                     <p className="text-xs text-muted-foreground">Sessions</p>
                   </div>
                 </div>
               </>
             ) : (
               <div className="text-center py-6">
-                <Brain className="w-12 h-12 text-primary/40 mx-auto mb-3" />
+                <Brain className="w-12 h-12 text-violet-400/40 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
                   Click "Get AI Advice" to receive personalized study tips
                 </p>
@@ -276,12 +283,12 @@ const DashboardHome = () => {
             {burnoutCheck && burnoutCheck.risk_level !== 'low' && (
               <div className={`p-4 rounded-xl ${
                 burnoutCheck.risk_level === 'high' 
-                  ? 'bg-destructive/10 border border-destructive/30' 
-                  : 'bg-amber/10 border border-amber/30'
+                  ? 'bg-rose-500/10 border border-rose-500/30' 
+                  : 'bg-amber-500/10 border border-amber-500/30'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className={`w-4 h-4 ${
-                    burnoutCheck.risk_level === 'high' ? 'text-destructive' : 'text-amber'
+                    burnoutCheck.risk_level === 'high' ? 'text-rose-500' : 'text-amber-500'
                   }`} />
                   <span className="font-medium text-sm">
                     {burnoutCheck.risk_level === 'high' ? 'High Burnout Risk' : 'Moderate Workload'}
@@ -299,7 +306,7 @@ const DashboardHome = () => {
       {/* Recent Tasks & Quick Actions */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Tasks */}
-        <Card className="bg-card/50 border-white/10 rounded-2xl">
+        <Card className="glass-card rounded-2xl border-0 card-hover">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-heading text-lg">Pending Tasks</CardTitle>
             <Link to="/dashboard/tasks">
@@ -314,12 +321,12 @@ const DashboardHome = () => {
               recentTasks.map((task) => (
                 <div
                   key={task.task_id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl glass hover:bg-white/60 dark:hover:bg-white/10 transition-colors"
                 >
-                  <div className={`w-2 h-2 rounded-full ${
-                    task.priority === 'urgent' ? 'bg-destructive' :
-                    task.priority === 'high' ? 'bg-amber' :
-                    task.priority === 'medium' ? 'bg-primary' : 'bg-muted-foreground'
+                  <div className={`w-3 h-3 rounded-full ${
+                    task.priority === 'urgent' ? 'bg-rose-500' :
+                    task.priority === 'high' ? 'bg-amber-500' :
+                    task.priority === 'medium' ? 'bg-violet-500' : 'bg-gray-400'
                   }`} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{task.title}</p>
@@ -344,7 +351,7 @@ const DashboardHome = () => {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="bg-card/50 border-white/10 rounded-2xl">
+        <Card className="glass-card rounded-2xl border-0 card-hover">
           <CardHeader>
             <CardTitle className="font-heading text-lg">Quick Actions</CardTitle>
           </CardHeader>
@@ -352,41 +359,49 @@ const DashboardHome = () => {
             <Link to="/dashboard/tasks">
               <Button
                 variant="outline"
-                className="w-full h-auto py-6 rounded-xl border-white/10 hover:border-primary/50 hover:bg-primary/5 flex flex-col gap-2"
+                className="w-full h-auto py-6 rounded-xl glass border-0 hover:bg-white/60 dark:hover:bg-white/10 flex flex-col gap-2"
                 data-testid="quick-add-task-btn"
               >
-                <CheckCircle className="w-6 h-6 text-primary" />
-                <span>Add Task</span>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-foreground">Add Task</span>
               </Button>
             </Link>
             <Link to="/dashboard/focus">
               <Button
                 variant="outline"
-                className="w-full h-auto py-6 rounded-xl border-white/10 hover:border-cyan/50 hover:bg-cyan/5 flex flex-col gap-2"
+                className="w-full h-auto py-6 rounded-xl glass border-0 hover:bg-white/60 dark:hover:bg-white/10 flex flex-col gap-2"
                 data-testid="quick-start-focus-btn"
               >
-                <Timer className="w-6 h-6 text-cyan" />
-                <span>Start Focus</span>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                  <Timer className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-foreground">Start Focus</span>
               </Button>
             </Link>
             <Link to="/dashboard/goals">
               <Button
                 variant="outline"
-                className="w-full h-auto py-6 rounded-xl border-white/10 hover:border-amber/50 hover:bg-amber/5 flex flex-col gap-2"
+                className="w-full h-auto py-6 rounded-xl glass border-0 hover:bg-white/60 dark:hover:bg-white/10 flex flex-col gap-2"
                 data-testid="quick-set-goal-btn"
               >
-                <Target className="w-6 h-6 text-amber" />
-                <span>Set Goal</span>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-foreground">Set Goal</span>
               </Button>
             </Link>
             <Link to="/dashboard/analytics">
               <Button
                 variant="outline"
-                className="w-full h-auto py-6 rounded-xl border-white/10 hover:border-rose/50 hover:bg-rose/5 flex flex-col gap-2"
+                className="w-full h-auto py-6 rounded-xl glass border-0 hover:bg-white/60 dark:hover:bg-white/10 flex flex-col gap-2"
                 data-testid="quick-view-stats-btn"
               >
-                <BarChart3 className="w-6 h-6 text-rose" />
-                <span>View Stats</span>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-foreground">View Stats</span>
               </Button>
             </Link>
           </CardContent>
