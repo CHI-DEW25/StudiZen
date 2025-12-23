@@ -71,4 +71,20 @@ export const aiApi = {
   checkBurnout: () => api.post('/ai/burnout-check'),
 };
 
+// Leaderboard API
+export const leaderboardApi = {
+  get: (period = 'weekly', limit = 20) => api.get('/leaderboard', { params: { period, limit } }),
+  getGroups: (period = 'weekly', limit = 10) => api.get('/leaderboard/groups', { params: { period, limit } }),
+};
+
+// Study Groups API
+export const groupsApi = {
+  getAll: (search) => api.get('/groups', { params: { search } }),
+  getById: (id) => api.get(`/groups/${id}`),
+  getMyCurrent: () => api.get('/groups/my/current'),
+  create: (data) => api.post('/groups', data),
+  join: (id) => api.post(`/groups/${id}/join`),
+  leave: (id) => api.post(`/groups/${id}/leave`),
+};
+
 export default api;
