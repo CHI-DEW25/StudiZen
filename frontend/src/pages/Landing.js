@@ -12,7 +12,12 @@ import {
   Play,
   Star,
   Zap,
-  Brain
+  Brain,
+  Shield,
+  Clock,
+  TrendingUp,
+  Users,
+  ChevronRight,
 } from 'lucide-react';
 
 const Landing = () => {
@@ -21,57 +26,94 @@ const Landing = () => {
   const features = [
     {
       icon: <CheckCircle className="w-6 h-6" />,
-      title: 'Smart Task Manager',
-      description: 'Organize tasks with priorities, deadlines, and dependencies. Auto-detect overdue items.',
+      title: 'Be Task Ready',
+      description: 'Organize tasks with smart priorities, deadlines, and AI-powered breakdowns.',
+      metric: '89%',
+      metricLabel: 'completion rate',
     },
     {
       icon: <Timer className="w-6 h-6" />,
-      title: 'Pomodoro Focus Timer',
-      description: 'Customizable focus sessions with breaks. Track your daily focus time.',
+      title: 'Be Focus Ready',
+      description: 'Pomodoro sessions with tracking. Know exactly where your time goes.',
+      metric: '4.2h',
+      metricLabel: 'avg daily focus',
     },
     {
       icon: <Target className="w-6 h-6" />,
-      title: 'Weekly Goals',
-      description: 'Set achievable weekly objectives and track your progress visually.',
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6" />,
-      title: 'Analytics Dashboard',
-      description: 'Visualize your productivity with charts and actionable insights.',
+      title: 'Be Goal Ready',
+      description: 'Set weekly objectives and watch your progress with visual indicators.',
+      metric: '12',
+      metricLabel: 'goals/month',
     },
     {
       icon: <Brain className="w-6 h-6" />,
-      title: 'AI Study Coach',
-      description: 'Get personalized study tips based on your patterns and habits.',
+      title: 'Be AI Ready',
+      description: 'Get personalized study tips and burnout detection from your AI coach.',
+      metric: '24/7',
+      metricLabel: 'AI assistance',
+    },
+  ];
+
+  const stats = [
+    { value: '10K+', label: 'Active Students' },
+    { value: '2.5M', label: 'Tasks Completed' },
+    { value: '98%', label: 'Satisfaction Rate' },
+    { value: '4.9', label: 'App Rating' },
+  ];
+
+  const testimonials = [
+    {
+      quote: "StudySmart helped me increase my GPA by 0.8 points in just one semester.",
+      author: "Sarah Chen",
+      role: "Stanford University",
+      avatar: "SC",
     },
     {
-      icon: <Sparkles className="w-6 h-6" />,
-      title: 'Task Breakdown',
-      description: 'AI breaks down large tasks into smaller, manageable steps.',
+      quote: "The AI coach is like having a personal tutor available 24/7.",
+      author: "Alex Kumar",
+      role: "MIT",
+      avatar: "AK",
+    },
+    {
+      quote: "Finally, a productivity app that actually understands how students work.",
+      author: "Emma Wilson",
+      role: "Oxford University",
+      avatar: "EW",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Noise texture */}
-      <div className="fixed inset-0 noise pointer-events-none z-0" />
+    <div className="min-h-screen gradient-bg relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 gradient-hero pointer-events-none" />
+      <div className="fixed inset-0 ring-pattern pointer-events-none opacity-50" />
       
-      {/* Gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-violet-600/20 via-background to-background z-0" />
+      {/* Floating orbs */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px] animate-pulse-glow" />
+      <div className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-emerald-600/15 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
 
       {/* Navigation */}
-      <nav className="relative z-10 flex items-center justify-between px-6 md:px-12 lg:px-24 py-6">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+      <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 lg:px-24 py-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg glow-green">
             <Zap className="w-5 h-5 text-white" />
           </div>
-          <span className="font-heading text-xl font-bold text-foreground">StudySmart</span>
+          <div>
+            <span className="font-heading text-xl font-bold text-white">StudySmart</span>
+            <span className="hidden md:block text-[10px] text-emerald-400 font-medium tracking-wider">PRODUCTIVITY</span>
+          </div>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
+          <a href="#testimonials" className="text-sm text-gray-400 hover:text-white transition-colors">Students</a>
+          <a href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
+        </div>
+
+        <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <Link to="/dashboard">
-              <Button className="rounded-full px-6 glow-primary" data-testid="go-to-dashboard-btn">
+              <Button className="btn-primary rounded-xl px-6" data-testid="go-to-dashboard-btn">
                 Go to Dashboard
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
@@ -79,14 +121,13 @@ const Landing = () => {
           ) : (
             <>
               <Link to="/login">
-                <Button variant="ghost" className="rounded-full" data-testid="login-nav-btn">
+                <Button variant="ghost" className="text-gray-400 hover:text-white rounded-xl" data-testid="login-nav-btn">
                   Log In
                 </Button>
               </Link>
               <Link to="/register">
-                <Button className="rounded-full px-6 glow-primary" data-testid="get-started-nav-btn">
-                  Get Started
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <Button className="btn-primary rounded-xl px-6" data-testid="get-started-nav-btn">
+                  Get started free
                 </Button>
               </Link>
             </>
@@ -95,132 +136,206 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 min-h-[85vh] flex flex-col lg:flex-row items-center gap-12 px-6 md:px-12 lg:px-24 py-12">
-        {/* Left Content */}
-        <div className="flex-1 space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-primary font-medium">AI-Powered Study Assistant</span>
-          </div>
-          
-          <h1 className="font-heading text-5xl md:text-7xl font-bold tracking-tight">
-            <span className="text-foreground">Master Your</span>
-            <br />
-            <span className="text-primary">Study Habits</span>
-          </h1>
-          
-          <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-            The all-in-one productivity dashboard for students. Plan tasks, track focus, 
-            set goals, and get AI-powered coaching to achieve academic excellence.
-          </p>
-          
-          <div className="flex flex-wrap gap-4">
-            <Link to={isAuthenticated ? "/dashboard" : "/register"}>
-              <Button 
-                size="lg" 
-                className="rounded-full px-8 py-6 text-lg glow-primary hover:scale-105 transition-transform"
-                data-testid="hero-start-free-btn"
-              >
-                Start Free
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
+      <section className="relative z-10 min-h-[90vh] flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-20 text-center">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 animate-fade-up">
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <span className="text-sm text-gray-300">AI-Powered Study Assistant</span>
+          <ChevronRight className="w-4 h-4 text-gray-500" />
+        </div>
+        
+        {/* Main headline */}
+        <h1 className="font-heading text-5xl md:text-7xl lg:text-8xl font-bold max-w-5xl mb-6 animate-fade-up stagger-1">
+          <span className="text-gradient-white">Study Smarter.</span>
+          <br />
+          <span className="text-gradient-green glow-text">Achieve More.</span>
+        </h1>
+        
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-10 animate-fade-up stagger-2">
+          The all-in-one productivity dashboard that transforms how students plan, 
+          focus, and succeed. Powered by AI, designed for excellence.
+        </p>
+        
+        {/* CTA Buttons */}
+        <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-up stagger-3">
+          <Link to={isAuthenticated ? "/dashboard" : "/register"}>
             <Button 
-              variant="outline" 
               size="lg" 
-              className="rounded-full px-8 py-6 text-lg border-white/10 hover:bg-white/5"
-              data-testid="watch-demo-btn"
+              className="btn-primary rounded-xl px-8 py-6 text-lg"
+              data-testid="hero-start-free-btn"
             >
-              <Play className="w-5 h-5 mr-2" />
-              Watch Demo
+              Get started free
+              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-          </div>
-          
-          {/* Social Proof */}
-          <div className="flex items-center gap-4 pt-4">
-            <div className="flex -space-x-3">
-              {[1,2,3,4].map((i) => (
-                <div 
-                  key={i} 
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-600 border-2 border-background"
-                />
-              ))}
-            </div>
-            <div>
-              <div className="flex items-center gap-1">
-                {[1,2,3,4,5].map((i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber text-amber" />
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">Loved by 10,000+ students</p>
-            </div>
-          </div>
+          </Link>
+          <Button 
+            size="lg"
+            className="btn-secondary rounded-xl px-8 py-6 text-lg"
+            data-testid="watch-demo-btn"
+          >
+            <Play className="w-5 h-5 mr-2" />
+            See a demo
+          </Button>
         </div>
 
-        {/* Right Content - Dashboard Preview */}
-        <div className="flex-1 relative">
-          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-card/50 backdrop-blur-xl shadow-2xl">
-            {/* Mock Dashboard */}
-            <div className="p-6 space-y-4">
-              {/* Header dots */}
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-rose" />
-                <div className="w-3 h-3 rounded-full bg-amber" />
-                <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              </div>
-              
-              {/* Stats Row */}
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="p-4 rounded-xl bg-secondary/50 border border-white/5">
-                  <p className="text-sm text-muted-foreground">Today's Focus</p>
-                  <p className="text-2xl font-bold text-primary font-mono">4h 32m</p>
-                </div>
-                <div className="p-4 rounded-xl bg-secondary/50 border border-white/5">
-                  <p className="text-sm text-muted-foreground">Tasks Done</p>
-                  <p className="text-2xl font-bold text-cyan font-mono">12/15</p>
-                </div>
-              </div>
-              
-              {/* AI Coach Card */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-transparent border border-primary/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Brain className="w-5 h-5 text-primary" />
-                  <span className="font-medium text-foreground">AI Coach Says</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  "You're most productive at 9 AM. Schedule your hardest tasks then!"
-                </p>
-              </div>
+        {/* Stats Row */}
+        <div className="flex flex-wrap justify-center gap-8 md:gap-16 animate-fade-up stagger-4">
+          {stats.map((stat, index) => (
+            <div key={index} className="text-center">
+              <p className="text-3xl md:text-4xl font-bold text-white font-mono">{stat.value}</p>
+              <p className="text-sm text-gray-500">{stat.label}</p>
             </div>
-          </div>
-          
-          {/* Floating glow effect */}
-          <div className="absolute -inset-4 bg-gradient-to-r from-primary to-violet-600 rounded-3xl blur-3xl opacity-20 -z-10" />
+          ))}
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="relative z-10 px-6 md:px-12 lg:px-24 py-24">
+      {/* Feature Cards Section */}
+      <section id="features" className="relative z-10 px-6 md:px-12 lg:px-24 py-24">
         <div className="text-center mb-16">
-          <h2 className="font-heading text-3xl md:text-5xl font-bold mb-4">
-            Everything You Need to <span className="text-primary">Excel</span>
+          <p className="text-emerald-400 text-sm font-medium mb-4 tracking-wider uppercase">Features</p>
+          <h2 className="font-heading text-4xl md:text-5xl font-bold mb-4">
+            <span className="text-gradient-white">Everything You Need to</span>
+            <br />
+            <span className="text-gradient-green">Excel Academically</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            A complete productivity system designed specifically for students
-          </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="group p-8 rounded-2xl bg-card/50 border border-white/10 hover:border-primary/50 transition-all duration-300 hover:shadow-glow-lg"
+              className="glass-card glass-card-hover rounded-2xl p-8 group"
+              data-testid={`feature-card-${index}`}
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                {feature.icon}
+              <div className="flex items-start justify-between mb-6">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform border border-emerald-500/20">
+                  {feature.icon}
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-white font-mono">{feature.metric}</p>
+                  <p className="text-xs text-gray-500">{feature.metricLabel}</p>
+                </div>
               </div>
-              <h3 className="font-heading text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <h3 className="font-heading text-xl font-semibold text-white mb-2">{feature.title}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Dashboard Preview Section */}
+      <section className="relative z-10 px-6 md:px-12 lg:px-24 py-24">
+        <div className="text-center mb-16">
+          <p className="text-emerald-400 text-sm font-medium mb-4 tracking-wider uppercase">Dashboard</p>
+          <h2 className="font-heading text-4xl md:text-5xl font-bold">
+            <span className="text-gradient-white">Results in Minutes,</span>
+            <br />
+            <span className="text-gradient-green">Not Hours</span>
+          </h2>
+        </div>
+
+        {/* Mock Dashboard */}
+        <div className="max-w-6xl mx-auto glass-card rounded-3xl p-2 overflow-hidden">
+          <div className="bg-[hsl(260,35%,6%)] rounded-2xl p-6">
+            {/* Top bar */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Live Preview</span>
+              </div>
+            </div>
+            
+            {/* Dashboard content */}
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Stat cards */}
+              <div className="glass-card rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <span className="text-sm text-gray-400">Tasks Done</span>
+                </div>
+                <p className="text-3xl font-bold text-white font-mono">24<span className="text-gray-500">/30</span></p>
+              </div>
+              
+              <div className="glass-card rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <span className="text-sm text-gray-400">Focus Time</span>
+                </div>
+                <p className="text-3xl font-bold text-white font-mono">4.5<span className="text-gray-500">h</span></p>
+              </div>
+              
+              <div className="glass-card rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <span className="text-sm text-gray-400">Score</span>
+                </div>
+                <p className="text-3xl font-bold text-white font-mono">92<span className="text-gray-500">%</span></p>
+              </div>
+            </div>
+
+            {/* Chart area */}
+            <div className="mt-6 glass-card rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-400">Weekly Progress</span>
+                <span className="text-xs text-emerald-400">+12% vs last week</span>
+              </div>
+              <div className="h-32 flex items-end justify-between gap-2">
+                {[40, 65, 45, 80, 60, 90, 75].map((height, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div 
+                      className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-lg transition-all"
+                      style={{ height: `${height}%` }}
+                    />
+                    <span className="text-[10px] text-gray-600">
+                      {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="relative z-10 px-6 md:px-12 lg:px-24 py-24">
+        <div className="text-center mb-16">
+          <p className="text-emerald-400 text-sm font-medium mb-4 tracking-wider uppercase">Testimonials</p>
+          <h2 className="font-heading text-4xl md:text-5xl font-bold">
+            <span className="text-gradient-white">Students Love</span>
+            <span className="text-gradient-green"> StudySmart</span>
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {testimonials.map((testimonial, index) => (
+            <div key={index} className="glass-card glass-card-hover rounded-2xl p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[1,2,3,4,5].map((i) => (
+                  <Star key={i} className="w-4 h-4 fill-emerald-400 text-emerald-400" />
+                ))}
+              </div>
+              <p className="text-gray-300 mb-6 leading-relaxed">"{testimonial.quote}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+                  {testimonial.avatar}
+                </div>
+                <div>
+                  <p className="font-medium text-white">{testimonial.author}</p>
+                  <p className="text-xs text-gray-500">{testimonial.role}</p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -228,40 +343,57 @@ const Landing = () => {
 
       {/* CTA Section */}
       <section className="relative z-10 px-6 md:px-12 lg:px-24 py-24">
-        <div className="relative rounded-3xl bg-gradient-to-r from-primary/20 to-violet-600/20 border border-primary/30 p-12 md:p-16 text-center overflow-hidden">
-          <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        <div className="max-w-4xl mx-auto glass-card rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
+          {/* Background glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/20 rounded-full blur-[100px]" />
           
-          <h2 className="relative font-heading text-3xl md:text-5xl font-bold mb-4">
-            Ready to Transform Your Study Habits?
+          <h2 className="relative font-heading text-4xl md:text-5xl font-bold mb-4">
+            <span className="text-gradient-white">Ready to</span>
+            <span className="text-gradient-green"> Get Started?</span>
           </h2>
-          <p className="relative text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of students who are already achieving more with StudySmart
+          <p className="relative text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+            Join thousands of students already achieving more with StudySmart. Free forever for basic features.
           </p>
           
-          <Link to={isAuthenticated ? "/dashboard" : "/register"}>
+          <div className="relative flex flex-wrap justify-center gap-4">
+            <Link to={isAuthenticated ? "/dashboard" : "/register"}>
+              <Button 
+                size="lg" 
+                className="btn-primary rounded-xl px-10 py-6 text-lg"
+                data-testid="cta-get-started-btn"
+              >
+                Get started free
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
             <Button 
-              size="lg" 
-              className="relative rounded-full px-12 py-6 text-lg glow-primary hover:scale-105 transition-transform"
-              data-testid="cta-get-started-btn"
+              size="lg"
+              className="btn-secondary rounded-xl px-10 py-6 text-lg"
             >
-              Get Started Free
-              <ArrowRight className="w-5 h-5 ml-2" />
+              Talk to Sales
             </Button>
-          </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 px-6 md:px-12 lg:px-24 py-8 border-t border-white/10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+      <footer className="relative z-10 px-6 md:px-12 lg:px-24 py-12 border-t border-white/5">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="font-heading font-bold">StudySmart</span>
+            <span className="font-heading font-bold text-white">StudySmart</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © 2025 StudySmart. Built for students, by students.
+          
+          <div className="flex items-center gap-8 text-sm text-gray-500">
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <a href="#" className="hover:text-white transition-colors">Contact</a>
+          </div>
+          
+          <p className="text-sm text-gray-600">
+            © 2025 StudySmart. All rights reserved.
           </p>
         </div>
       </footer>
