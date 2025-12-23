@@ -56,16 +56,16 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen gradient-bg">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed inset-y-0 z-50">
+      <aside className="hidden md:flex flex-col w-64 glass-sidebar fixed inset-y-0 z-50">
         {/* Logo */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-white/20">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="font-heading text-xl font-bold">StudySmart</span>
+            <span className="font-heading text-xl font-bold text-foreground">StudySmart</span>
           </Link>
         </div>
 
@@ -78,8 +78,8 @@ const DashboardLayout = () => {
               data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive(item.path)
-                  ? 'bg-primary text-primary-foreground shadow-glow'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                  ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30'
+                  : 'text-muted-foreground hover:bg-white/50 dark:hover:bg-white/10 hover:text-foreground'
               }`}
             >
               <item.icon className="w-5 h-5" />
@@ -92,23 +92,23 @@ const DashboardLayout = () => {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/20">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-secondary transition-colors" data-testid="user-menu-trigger">
-                <Avatar className="w-10 h-10">
+              <button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors" data-testid="user-menu-trigger">
+                <Avatar className="w-10 h-10 ring-2 ring-white/50">
                   <AvatarImage src={user?.picture} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white">
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left">
-                  <p className="font-medium text-sm truncate">{user?.name || 'User'}</p>
+                  <p className="font-medium text-sm truncate text-foreground">{user?.name || 'User'}</p>
                   <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+            <DropdownMenuContent align="end" className="w-56 rounded-xl glass-card-strong">
               <DropdownMenuItem onClick={toggleTheme} data-testid="theme-toggle-btn">
                 {theme === 'dark' ? (
                   <>
@@ -139,24 +139,24 @@ const DashboardLayout = () => {
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 bg-background/95 backdrop-blur border-b border-white/10">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 glass-card">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-secondary"
+            className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-white/10"
             data-testid="mobile-menu-toggle"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
           
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
             <span className="font-heading font-bold">StudySmart</span>
           </Link>
           
-          <button className="p-2 rounded-lg hover:bg-secondary" data-testid="notifications-btn">
+          <button className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-white/10" data-testid="notifications-btn">
             <Bell className="w-5 h-5" />
           </button>
         </div>
@@ -165,18 +165,18 @@ const DashboardLayout = () => {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
-          className="md:hidden fixed inset-0 z-40 bg-black/50"
+          className="md:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Mobile Sidebar */}
-      <aside className={`md:hidden fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-white/10 transform transition-transform ${
+      <aside className={`md:hidden fixed inset-y-0 left-0 z-50 w-64 glass-sidebar transform transition-transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-white/20">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
             <span className="font-heading text-xl font-bold">StudySmart</span>
@@ -191,8 +191,8 @@ const DashboardLayout = () => {
               onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive(item.path)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-secondary'
+                  ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white'
+                  : 'text-muted-foreground hover:bg-white/50 dark:hover:bg-white/10'
               }`}
             >
               <item.icon className="w-5 h-5" />
@@ -201,7 +201,7 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/20">
           <Button
             variant="ghost"
             className="w-full justify-start"
