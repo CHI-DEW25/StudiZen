@@ -17,6 +17,7 @@ import {
   Timer,
   Flame,
   Sparkles,
+  BarChart3,
 } from 'lucide-react';
 import {
   LineChart,
