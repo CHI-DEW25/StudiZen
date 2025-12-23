@@ -392,6 +392,9 @@ const DashboardHome = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Leaderboard Section */}
+      <Leaderboard currentUser={user} userStats={overview} />
     </div>
   );
 };
