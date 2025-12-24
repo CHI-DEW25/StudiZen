@@ -69,30 +69,37 @@ const DashboardLayout = () => {
     return location.pathname.startsWith(path);
   };
 
-  const NavItem = ({ item, onClick }) => (
+  const NavItem = ({ item, onClick, collapsed = false }) => (
     <Link
       to={item.path}
       onClick={onClick}
       data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+      title={collapsed ? item.label : undefined}
       className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+        collapsed ? 'justify-center' : ''
+      } ${
         isActive(item.path)
           ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 border border-emerald-500/20'
           : 'text-gray-500 hover:text-white hover:bg-white/5'
       }`}
     >
       <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-emerald-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
-      <span className="font-medium flex-1">{item.label}</span>
-      {item.badge && (
-        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-          isActive(item.path) 
-            ? 'bg-emerald-500/30 text-emerald-300' 
-            : 'bg-white/10 text-gray-400'
-        }`}>
-          {item.badge}
-        </span>
-      )}
-      {isActive(item.path) && (
-        <ChevronRight className="w-4 h-4 text-emerald-500/50" />
+      {!collapsed && (
+        <>
+          <span className="font-medium flex-1">{item.label}</span>
+          {item.badge && (
+            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+              isActive(item.path) 
+                ? 'bg-emerald-500/30 text-emerald-300' 
+                : 'bg-white/10 text-gray-400'
+            }`}>
+              {item.badge}
+            </span>
+          )}
+          {isActive(item.path) && (
+            <ChevronRight className="w-4 h-4 text-emerald-500/50" />
+          )}
+        </>
       )}
     </Link>
   );
