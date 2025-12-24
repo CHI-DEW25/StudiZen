@@ -231,6 +231,13 @@
             hsl(265, 40%, 6%) 50%, 
             hsl(260, 35%, 4%) 100%);
     }
+
+    .light .sidebar-gradient {
+        background: linear-gradient(180deg, 
+            hsl(220, 20%, 98%) 0%, 
+            hsl(220, 15%, 96%) 50%, 
+            hsl(220, 20%, 94%) 100%);
+    }
     
     /* Ring patterns (like in Puzzle) */
     .ring-pattern {
