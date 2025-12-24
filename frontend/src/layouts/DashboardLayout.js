@@ -132,7 +132,7 @@ const DashboardLayout = () => {
         {/* Collapse Toggle Button */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-[hsl(260,35%,12%)] border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors z-10"
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-card border border-border dark:bg-[hsl(260,35%,12%)] dark:border-white/10 flex items-center justify-center text-gray-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/10 transition-colors z-10"
           data-testid="collapse-sidebar-btn"
         >
           {sidebarCollapsed ? (
@@ -152,7 +152,7 @@ const DashboardLayout = () => {
 
           {!sidebarCollapsed && (
             <div className="pt-6 pb-2">
-              <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Study Tools</p>
+              <p className="px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Study Tools</p>
             </div>
           )}
 
@@ -164,7 +164,7 @@ const DashboardLayout = () => {
 
           {!sidebarCollapsed && (
             <div className="pt-6 pb-2">
-              <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Account</p>
+              <p className="px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Account</p>
             </div>
           )}
 
@@ -185,9 +185,9 @@ const DashboardLayout = () => {
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="font-semibold text-white text-sm">Go Premium</span>
+                  <span className="font-semibold text-foreground dark:text-white text-sm">Go Premium</span>
                 </div>
-                <p className="text-xs text-gray-500 mb-3">Unlock AI coaching & analytics</p>
+                <p className="text-xs text-muted-foreground mb-3">Unlock AI coaching & analytics</p>
                 <Button 
                   size="sm" 
                   className="w-full btn-primary rounded-lg text-sm"
