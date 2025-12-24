@@ -1,106 +1,237 @@
 {
-  "timestamp": "2025-12-23T19:26:27.884115",
-  "total_tests": 13,
-  "passed_tests": 10,
-  "success_rate": 76.9,
-  "failed_tests": [
+  "summary": {
+    "tests_run": 38,
+    "tests_passed": 38,
+    "success_rate": "100.0%"
+  },
+  "results": [
     {
-      "test": "Create Task",
-      "success": false,
-      "details": "Status: 200 (Expected 201) - Unknown error",
-      "endpoint": "tasks"
-    },
-    {
-      "test": "Start Pomodoro Session",
-      "success": false,
-      "details": "Status: 200 (Expected 201) - Unknown error",
-      "endpoint": "pomodoro/start"
-    },
-    {
-      "test": "Create Goal",
-      "success": false,
-      "details": "Status: 200 (Expected 201) - Unknown error",
-      "endpoint": "goals"
-    }
-  ],
-  "all_results": [
-    {
-      "test": "API Root",
+      "test": "Login with demo user",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": ""
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.282015"
     },
     {
-      "test": "Health Check",
+      "test": "Get current user",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "health"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.323772"
     },
     {
-      "test": "User Registration",
+      "test": "Create task",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "auth/register"
+      "details": "Status: 201, Expected: 201",
+      "timestamp": "2025-12-24T09:10:53.367815"
     },
     {
-      "test": "Get Current User",
+      "test": "Get all tasks",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "auth/me"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.449493"
     },
     {
-      "test": "Create Task",
-      "success": false,
-      "details": "Status: 200 (Expected 201) - Unknown error",
-      "endpoint": "tasks"
-    },
-    {
-      "test": "Start Pomodoro Session",
-      "success": false,
-      "details": "Status: 200 (Expected 201) - Unknown error",
-      "endpoint": "pomodoro/start"
-    },
-    {
-      "test": "Create Goal",
-      "success": false,
-      "details": "Status: 200 (Expected 201) - Unknown error",
-      "endpoint": "goals"
-    },
-    {
-      "test": "Get Analytics Overview",
+      "test": "Get task task_1cf6f87f17ce",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "analytics/overview"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.489769"
     },
     {
-      "test": "Get Daily Stats",
+      "test": "Complete task (XP award)",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "analytics/daily-stats"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.561377"
+    },
+    {
+      "test": "Start pomodoro session",
+      "success": true,
+      "details": "Status: 201, Expected: 201",
+      "timestamp": "2025-12-24T09:10:53.600346"
+    },
+    {
+      "test": "Complete pomodoro session (XP award)",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.644129"
+    },
+    {
+      "test": "Get pomodoro stats",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.681492"
+    },
+    {
+      "test": "Get pomodoro sessions",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.721008"
+    },
+    {
+      "test": "Get weekly leaderboard",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.769429"
+    },
+    {
+      "test": "Leaderboard weekly has real data structure",
+      "success": true,
+      "details": "Fields present: ['rank', 'user_id', 'name', 'picture', 'xp', 'total_xp', 'streak', 'focus_hours', 'tasks_completed', 'badges', 'study_group_id', 'is_current_user']",
+      "timestamp": "2025-12-24T09:10:53.770171"
+    },
+    {
+      "test": "Get monthly leaderboard",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.812202"
+    },
+    {
+      "test": "Leaderboard monthly has real data structure",
+      "success": true,
+      "details": "Fields present: ['rank', 'user_id', 'name', 'picture', 'xp', 'total_xp', 'streak', 'focus_hours', 'tasks_completed', 'badges', 'study_group_id', 'is_current_user']",
+      "timestamp": "2025-12-24T09:10:53.813008"
+    },
+    {
+      "test": "Get alltime leaderboard",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.858993"
+    },
+    {
+      "test": "Leaderboard alltime has real data structure",
+      "success": true,
+      "details": "Fields present: ['rank', 'user_id', 'name', 'picture', 'xp', 'total_xp', 'streak', 'focus_hours', 'tasks_completed', 'badges', 'study_group_id', 'is_current_user']",
+      "timestamp": "2025-12-24T09:10:53.859686"
+    },
+    {
+      "test": "Get group leaderboard",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.895223"
+    },
+    {
+      "test": "Get my current group",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.933391"
+    },
+    {
+      "test": "Get all public groups",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:53.971707"
+    },
+    {
+      "test": "Create study group",
+      "success": true,
+      "details": "Status: 201, Expected: 201",
+      "timestamp": "2025-12-24T09:10:54.035664"
+    },
+    {
+      "test": "Get group details",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.073727"
+    },
+    {
+      "test": "Send group message",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.131852"
+    },
+    {
+      "test": "Get group messages",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.171491"
+    },
+    {
+      "test": "Create group goal",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.274270"
+    },
+    {
+      "test": "Get group goals",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.310214"
+    },
+    {
+      "test": "Contribute to group goal (XP award)",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.349952"
+    },
+    {
+      "test": "Leave study group",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.391721"
+    },
+    {
+      "test": "Get user XP before actions",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.471382"
+    },
+    {
+      "test": "Create high priority task for XP test",
+      "success": true,
+      "details": "Status: 201, Expected: 201",
+      "timestamp": "2025-12-24T09:10:54.509805"
+    },
+    {
+      "test": "Complete high priority task",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.552019"
+    },
+    {
+      "test": "Get user XP after task completion",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.589514"
+    },
+    {
+      "test": "XP awarded for task completion",
+      "success": true,
+      "details": "XP gained: 40 (from 73 to 113)",
+      "timestamp": "2025-12-24T09:10:54.590268"
+    },
+    {
+      "test": "Get analytics overview",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.630794"
+    },
+    {
+      "test": "Get daily stats",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:10:54.673760"
     },
     {
       "test": "AI Study Coach",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "ai/study-coach"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:11:03.229685"
     },
     {
       "test": "AI Task Breakdown",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "ai/break-down-task"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:11:04.925907"
     },
     {
       "test": "AI Weekly Summary",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "ai/weekly-summary"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:11:06.666837"
     },
     {
       "test": "AI Burnout Check",
       "success": true,
-      "details": "Status: 200",
-      "endpoint": "ai/burnout-check"
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2025-12-24T09:11:06.708573"
     }
   ]
 }
