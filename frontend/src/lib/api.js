@@ -85,6 +85,14 @@ export const groupsApi = {
   create: (data) => api.post('/groups', data),
   join: (id) => api.post(`/groups/${id}/join`),
   leave: (id) => api.post(`/groups/${id}/leave`),
+  // Chat
+  getMessages: (id, limit = 50) => api.get(`/groups/${id}/messages`, { params: { limit } }),
+  sendMessage: (id, content) => api.post(`/groups/${id}/messages`, { content }),
+  // Shared Goals
+  getGoals: (id) => api.get(`/groups/${id}/goals`),
+  createGoal: (id, data) => api.post(`/groups/${id}/goals`, data),
+  contributeToGoal: (groupId, goalId) => api.post(`/groups/${groupId}/goals/${goalId}/contribute`),
+  completeGoal: (groupId, goalId) => api.post(`/groups/${groupId}/goals/${goalId}/complete`),
 };
 
 export default api;
