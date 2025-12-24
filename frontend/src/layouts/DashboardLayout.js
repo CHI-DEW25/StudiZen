@@ -348,7 +348,9 @@ const DashboardLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="md:pl-72 pt-16 md:pt-0 min-h-screen">
+      <main className={`pt-16 md:pt-0 min-h-screen transition-all duration-300 ${
+        sidebarCollapsed ? 'md:pl-20' : 'md:pl-72'
+      }`}>
         <div className="p-6 md:p-8">
           <Outlet />
         </div>
