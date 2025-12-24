@@ -210,6 +210,14 @@
         @apply bg-white/10 border-white/20;
         transform: translateY(-2px);
     }
+
+    .light .btn-secondary {
+        @apply bg-gray-100 border-gray-200 text-gray-800;
+    }
+    
+    .light .btn-secondary:hover {
+        @apply bg-gray-200 border-gray-300;
+    }
     
     /* Text gradients */
     .text-gradient-green {
