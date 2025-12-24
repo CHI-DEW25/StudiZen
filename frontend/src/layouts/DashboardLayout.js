@@ -200,11 +200,11 @@ const DashboardLayout = () => {
         )}
 
         {/* User Section */}
-        <div className="relative p-4 border-t border-white/5">
+        <div className="relative p-4 border-t border-border dark:border-white/5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
-                className={`flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors ${
+                className={`flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted dark:hover:bg-white/5 transition-colors ${
                   sidebarCollapsed ? 'justify-center' : ''
                 }`}
                 data-testid="user-menu-trigger"
@@ -218,8 +218,8 @@ const DashboardLayout = () => {
                 {!sidebarCollapsed && (
                   <>
                     <div className="flex-1 text-left">
-                      <p className="font-medium text-sm text-white truncate">{user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-600 truncate">{user?.email}</p>
+                      <p className="font-medium text-sm text-foreground dark:text-white truncate">{user?.name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     </div>
                     <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
                   </>
@@ -228,11 +228,11 @@ const DashboardLayout = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end" 
-              className="w-56 rounded-xl bg-[hsl(260,35%,8%)] border border-white/10 shadow-xl"
+              className="w-56 rounded-xl bg-popover dark:bg-[hsl(260,35%,8%)] border border-border dark:border-white/10 shadow-xl"
             >
               <DropdownMenuItem 
                 onClick={toggleTheme} 
-                className="text-gray-400 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer"
+                className="text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5 rounded-lg cursor-pointer"
                 data-testid="theme-toggle-btn"
               >
                 {theme === 'dark' ? (
@@ -247,13 +247,13 @@ const DashboardLayout = () => {
                   </>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="text-gray-400 hover:text-white hover:bg-white/5 rounded-lg">
+              <DropdownMenuItem asChild className="text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5 rounded-lg">
                 <Link to="/dashboard/settings" data-testid="settings-link">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuSeparator className="bg-border dark:bg-white/10" />
               <DropdownMenuItem 
                 onClick={handleLogout} 
                 className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer"
