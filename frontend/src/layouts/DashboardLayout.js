@@ -80,7 +80,7 @@ const DashboardLayout = () => {
       } ${
         isActive(item.path)
           ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 border border-emerald-500/20'
-          : 'text-gray-500 hover:text-white hover:bg-white/5'
+          : 'text-gray-500 hover:text-foreground hover:bg-foreground/5 dark:hover:text-white dark:hover:bg-white/5'
       }`}
     >
       <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-emerald-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
@@ -91,7 +91,7 @@ const DashboardLayout = () => {
             <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
               isActive(item.path) 
                 ? 'bg-emerald-500/30 text-emerald-300' 
-                : 'bg-white/10 text-gray-400'
+                : 'bg-foreground/10 text-gray-400 dark:bg-white/10'
             }`}>
               {item.badge}
             </span>
@@ -107,7 +107,7 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen gradient-bg">
       {/* Sidebar - Desktop */}
-      <aside className={`hidden md:flex flex-col fixed inset-y-0 z-50 sidebar-gradient border-r border-white/5 transition-all duration-300 ${
+      <aside className={`hidden md:flex flex-col fixed inset-y-0 z-50 sidebar-gradient border-r border-border dark:border-white/5 transition-all duration-300 ${
         sidebarCollapsed ? 'w-20' : 'w-72'
       }`}>
         {/* Decorative elements */}
@@ -115,14 +115,14 @@ const DashboardLayout = () => {
         <div className="absolute bottom-40 -right-10 w-32 h-32 bg-violet-600/10 rounded-full blur-[60px]" />
         
         {/* Logo */}
-        <div className="relative p-6 border-b border-white/5">
+        <div className="relative p-6 border-b border-border dark:border-white/5">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg glow-green">
               <Zap className="w-5 h-5 text-white" />
             </div>
             {!sidebarCollapsed && (
               <div>
-                <span className="font-heading text-lg font-bold text-white">StudySmart</span>
+                <span className="font-heading text-lg font-bold text-foreground dark:text-white">StudySmart</span>
                 <span className="block text-[10px] text-emerald-400 font-medium tracking-wider">PRODUCTIVITY</span>
               </div>
             )}
