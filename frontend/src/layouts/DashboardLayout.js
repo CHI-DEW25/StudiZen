@@ -107,7 +107,9 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen gradient-bg">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-72 fixed inset-y-0 z-50 sidebar-gradient border-r border-white/5">
+      <aside className={`hidden md:flex flex-col fixed inset-y-0 z-50 sidebar-gradient border-r border-white/5 transition-all duration-300 ${
+        sidebarCollapsed ? 'w-20' : 'w-72'
+      }`}>
         {/* Decorative elements */}
         <div className="absolute top-20 -left-20 w-40 h-40 bg-emerald-600/10 rounded-full blur-[80px]" />
         <div className="absolute bottom-40 -right-10 w-32 h-32 bg-violet-600/10 rounded-full blur-[60px]" />
@@ -118,70 +120,93 @@ const DashboardLayout = () => {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg glow-green">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <span className="font-heading text-lg font-bold text-white">StudySmart</span>
-              <span className="block text-[10px] text-emerald-400 font-medium tracking-wider">PRODUCTIVITY</span>
-            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <span className="font-heading text-lg font-bold text-white">StudySmart</span>
+                <span className="block text-[10px] text-emerald-400 font-medium tracking-wider">PRODUCTIVITY</span>
+              </div>
+            )}
           </Link>
         </div>
+
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-[hsl(260,35%,12%)] border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors z-10"
+          data-testid="collapse-sidebar-btn"
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
 
         {/* Navigation */}
         <nav className="relative flex-1 p-4 space-y-1 overflow-y-auto">
           <div className="space-y-1">
             {mainNavItems.map((item) => (
-              <NavItem key={item.path} item={item} />
+              <NavItem key={item.path} item={item} collapsed={sidebarCollapsed} />
             ))}
           </div>
 
-          <div className="pt-6 pb-2">
-            <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Study Tools</p>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="pt-6 pb-2">
+              <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Study Tools</p>
+            </div>
+          )}
 
           <div className="space-y-1">
             {secondaryNavItems.map((item) => (
-              <NavItem key={item.path} item={item} />
+              <NavItem key={item.path} item={item} collapsed={sidebarCollapsed} />
             ))}
           </div>
 
-          <div className="pt-6 pb-2">
-            <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Account</p>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="pt-6 pb-2">
+              <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Account</p>
+            </div>
+          )}
 
           <div className="space-y-1">
             {bottomNavItems.map((item) => (
-              <NavItem key={item.path} item={item} />
+              <NavItem key={item.path} item={item} collapsed={sidebarCollapsed} />
             ))}
           </div>
         </nav>
 
-        {/* Upgrade Card */}
-        <div className="relative p-4">
-          <div className="glass-card rounded-2xl p-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/20 rounded-full blur-[40px]" />
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+        {/* Upgrade Card - Only show when expanded */}
+        {!sidebarCollapsed && (
+          <div className="relative p-4">
+            <div className="glass-card rounded-2xl p-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/20 rounded-full blur-[40px]" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="font-semibold text-white text-sm">Go Premium</span>
                 </div>
-                <span className="font-semibold text-white text-sm">Go Premium</span>
+                <p className="text-xs text-gray-500 mb-3">Unlock AI coaching & analytics</p>
+                <Button 
+                  size="sm" 
+                  className="w-full btn-primary rounded-lg text-sm"
+                >
+                  Upgrade Now
+                </Button>
               </div>
-              <p className="text-xs text-gray-500 mb-3">Unlock AI coaching & analytics</p>
-              <Button 
-                size="sm" 
-                className="w-full btn-primary rounded-lg text-sm"
-              >
-                Upgrade Now
-              </Button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* User Section */}
         <div className="relative p-4 border-t border-white/5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
-                className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
+                className={`flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors ${
+                  sidebarCollapsed ? 'justify-center' : ''
+                }`}
                 data-testid="user-menu-trigger"
               >
                 <Avatar className="w-10 h-10 ring-2 ring-emerald-500/30">
@@ -190,11 +215,15 @@ const DashboardLayout = () => {
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-sm text-white truncate">{user?.name || 'User'}</p>
-                  <p className="text-xs text-gray-600 truncate">{user?.email}</p>
-                </div>
-                <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+                {!sidebarCollapsed && (
+                  <>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium text-sm text-white truncate">{user?.name || 'User'}</p>
+                      <p className="text-xs text-gray-600 truncate">{user?.email}</p>
+                    </div>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+                  </>
+                )}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
