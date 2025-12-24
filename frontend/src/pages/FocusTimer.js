@@ -86,7 +86,7 @@ const FocusTimer = () => {
         const response = await pomodoroApi.start({
           focus_duration: focusDuration,
           break_duration: breakDuration,
-          task_id: selectedTask,
+          task_id: selectedTask || null,
         });
         setCurrentSession(response.data);
       } catch (error) {
