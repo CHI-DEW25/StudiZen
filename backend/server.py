@@ -1027,6 +1027,142 @@ async def get_my_study_group(current_user: dict = Depends(get_current_user)):
     
     return await get_study_group(group_id, current_user)
 
+# ============ GROUP CHAT ROUTES ============
+
+class GroupMessage(BaseModel):
+    content: str
+
+@api_router.post("/groups/{group_id}/messages")
+async def send_group_message(group_id: str, message: GroupMessage, current_user: dict = Depends(get_current_user)):
+    """Send a message to the group chat"""
+    if current_user.get("study_group_id") != group_id:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    message_doc = {
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "user_id": current_user["user_id"],
+        "user_name": current_user["name"],
+        "user_picture": current_user.get("picture"),
+        "content": message.content,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.group_messages.insert_one(message_doc)
+    
+    return {k: v for k, v in message_doc.items() if k != "_id"}
+
+@api_router.get("/groups/{group_id}/messages")
+async def get_group_messages(group_id: str, limit: int = 50, current_user: dict = Depends(get_current_user)):
+    """Get recent messages from the group chat"""
+    if current_user.get("study_group_id") != group_id:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    messages = await db.group_messages.find(
+        {"group_id": group_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return list(reversed(messages))
+
+# ============ GROUP GOALS (SHARED) ROUTES ============
+
+class GroupGoalCreate(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    target_date: Optional[str] = None
+
+@api_router.post("/groups/{group_id}/goals")
+async def create_group_goal(group_id: str, goal_data: GroupGoalCreate, current_user: dict = Depends(get_current_user)):
+    """Create a shared goal for the group"""
+    if current_user.get("study_group_id") != group_id:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    goal_doc = {
+        "goal_id": f"ggoal_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "title": goal_data.title,
+        "description": goal_data.description or "",
+        "target_date": goal_data.target_date,
+        "created_by": current_user["user_id"],
+        "created_by_name": current_user["name"],
+        "completed": False,
+        "progress": 0,
+        "contributors": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.group_goals.insert_one(goal_doc)
+    
+    return {k: v for k, v in goal_doc.items() if k != "_id"}
+
+@api_router.get("/groups/{group_id}/goals")
+async def get_group_goals(group_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all shared goals for the group"""
+    if current_user.get("study_group_id") != group_id:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    goals = await db.group_goals.find(
+        {"group_id": group_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return goals
+
+@api_router.post("/groups/{group_id}/goals/{goal_id}/contribute")
+async def contribute_to_group_goal(group_id: str, goal_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark contribution to a group goal"""
+    if current_user.get("study_group_id") != group_id:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    goal = await db.group_goals.find_one({"goal_id": goal_id, "group_id": group_id}, {"_id": 0})
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    # Check if user already contributed today
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    existing = [c for c in goal.get("contributors", []) if c["user_id"] == current_user["user_id"] and c["date"] == today]
+    
+    if existing:
+        return {"message": "Already contributed today", "goal": goal}
+    
+    # Add contribution
+    await db.group_goals.update_one(
+        {"goal_id": goal_id},
+        {
+            "$push": {"contributors": {
+                "user_id": current_user["user_id"],
+                "user_name": current_user["name"],
+                "date": today
+            }},
+            "$inc": {"progress": 10}
+        }
+    )
+    
+    # Award XP for contributing
+    await award_xp(current_user["user_id"], 15, "Contributed to group goal", group_id)
+    
+    updated_goal = await db.group_goals.find_one({"goal_id": goal_id}, {"_id": 0})
+    return {"message": "Contribution recorded!", "goal": updated_goal}
+
+@api_router.post("/groups/{group_id}/goals/{goal_id}/complete")
+async def complete_group_goal(group_id: str, goal_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark a group goal as completed"""
+    group = await db.study_groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group or group["owner_id"] != current_user["user_id"]:
+        raise HTTPException(status_code=403, detail="Only the group owner can complete goals")
+    
+    await db.group_goals.update_one(
+        {"goal_id": goal_id, "group_id": group_id},
+        {"$set": {"completed": True, "completed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Award XP to all contributors
+    goal = await db.group_goals.find_one({"goal_id": goal_id}, {"_id": 0})
+    unique_contributors = set(c["user_id"] for c in goal.get("contributors", []))
+    for user_id in unique_contributors:
+        await award_xp(user_id, 50, f"Group goal completed: {goal['title']}", group_id)
+    
+    return {"message": "Goal completed! XP awarded to all contributors."}
+
 # ============ ANALYTICS ROUTES ============
 
 @api_router.get("/analytics/overview")
