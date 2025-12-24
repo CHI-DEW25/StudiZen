@@ -67,11 +67,24 @@
     
     body {
         @apply bg-background text-foreground font-body antialiased;
+        min-height: 100vh;
+    }
+
+    /* Dark mode gradient background */
+    .dark body,
+    :root body {
         background: linear-gradient(180deg, 
             hsl(260, 30%, 4%) 0%, 
             hsl(260, 35%, 6%) 50%, 
             hsl(270, 30%, 8%) 100%);
-        min-height: 100vh;
+    }
+
+    /* Light mode clean background */
+    .light body {
+        background: linear-gradient(180deg, 
+            hsl(220, 20%, 97%) 0%, 
+            hsl(220, 15%, 95%) 50%, 
+            hsl(220, 20%, 93%) 100%);
     }
 }
 
