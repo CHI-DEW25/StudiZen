@@ -26,8 +26,10 @@ import {
   Zap,
   Bell,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
   HelpCircle,
+  Users,
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -36,6 +38,7 @@ const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const mainNavItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -46,6 +49,7 @@ const DashboardLayout = () => {
 
   const secondaryNavItems = [
     { path: '/dashboard/goals', icon: Target, label: 'Goals' },
+    { path: '/dashboard/groups', icon: Users, label: 'Study Groups' },
   ];
 
   const bottomNavItems = [
