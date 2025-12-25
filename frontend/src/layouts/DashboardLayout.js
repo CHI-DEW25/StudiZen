@@ -29,6 +29,7 @@ import {
   Sparkles,
   HelpCircle,
   Users,
+  Book,
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -48,6 +49,7 @@ const DashboardLayout = () => {
   const secondaryNavItems = [
     { path: '/dashboard/goals', icon: Target, label: 'Goals' },
     { path: '/dashboard/groups', icon: Users, label: 'Study Groups' },
+    { path: '/dashboard/notes', icon: Book, label: 'Revision Notes' }
   ];
 
   const bottomNavItems = [
