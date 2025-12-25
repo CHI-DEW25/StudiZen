@@ -152,7 +152,7 @@ const DashboardLayout = () => {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-semibold text-white text-sm">Go Premium</span>
+                <span className="font-semibold text-foreground text-sm">Go Premium</span>
               </div>
               <p className="text-xs text-gray-500 mb-3">Unlock AI coaching & analytics</p>
               <Button 
@@ -175,12 +175,12 @@ const DashboardLayout = () => {
               >
                 <Avatar className="w-10 h-10 ring-2 ring-emerald-500/30">
                   <AvatarImage src={user?.picture} />
-                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-foreground font-semibold">
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left">
-                  <p className="font-medium text-sm text-white truncate">{user?.name || 'User'}</p>
+                  <p className="font-medium text-sm text-foreground truncate">{user?.name || 'User'}</p>
                   <p className="text-xs text-gray-600 truncate">{user?.email}</p>
                 </div>
                 <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
