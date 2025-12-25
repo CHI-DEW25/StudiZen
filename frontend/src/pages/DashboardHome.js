@@ -344,7 +344,7 @@ const DashboardHome = () => {
               recentTasks.map((task) => (
                 <div
                   key={task.task_id}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-card-foreground/5 border border-foreground/5 hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-card-foreground/5 border border-foreground/5 hover:bg-secondary-foreground/10 transition-colors"
                 >
                   <div className={`w-3 h-3 rounded-full ${
                     task.priority === 'urgent' ? 'bg-red-500' :
