@@ -73,16 +73,16 @@ const DashboardLayout = () => {
       className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
         isActive(item.path)
           ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 border border-emerald-500/20'
-          : 'text-gray-500 hover:text-white hover:bg-white/5'
+          : 'text-muted-foreground-500 hover:text-foreground hover:bg-secondary-foreground/5'
       }`}
     >
-      <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-emerald-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
+      <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-emerald-400' : 'text-muted-foreground-600 group-hover:text-muted-foreground-400'}`} />
       <span className="font-medium flex-1">{item.label}</span>
       {item.badge && (
         <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
           isActive(item.path) 
             ? 'bg-emerald-500/30 text-emerald-300' 
-            : 'bg-white/10 text-gray-400'
+            : 'bg-white/10 text-muted-foreground-400'
         }`}>
           {item.badge}
         </span>
@@ -96,19 +96,19 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen gradient-bg">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-72 fixed inset-y-0 z-50 sidebar-gradient border-r border-white/5">
+      <aside className="hidden md:flex flex-col w-72 fixed inset-y-0 z-50 sidebar-gradient border-r border-border/5">
         {/* Decorative elements */}
         <div className="absolute top-20 -left-20 w-40 h-40 bg-emerald-600/10 rounded-full blur-[80px]" />
         <div className="absolute bottom-40 -right-10 w-32 h-32 bg-violet-600/10 rounded-full blur-[60px]" />
         
         {/* Logo */}
-        <div className="relative p-6 border-b border-white/5">
+        <div className="relative p-6 border-b border-border/5">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg glow-green">
-              <Zap className="w-5 h-5 text-white" />
+              <Zap className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <span className="font-heading text-lg font-bold text-white">StudySmart</span>
+              <span className="font-heading text-lg font-bold text-foreground">StudySmart</span>
               <span className="block text-[10px] text-emerald-400 font-medium tracking-wider">PRODUCTIVITY</span>
             </div>
           </Link>
@@ -123,7 +123,7 @@ const DashboardLayout = () => {
           </div>
 
           <div className="pt-6 pb-2">
-            <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Study Tools</p>
+            <p className="px-4 text-[10px] font-semibold text-muted-foreground-600 uppercase tracking-wider">Study Tools</p>
           </div>
 
           <div className="space-y-1">
@@ -133,7 +133,7 @@ const DashboardLayout = () => {
           </div>
 
           <div className="pt-6 pb-2">
-            <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Account</p>
+            <p className="px-4 text-[10px] font-semibold text-muted-foreground-600 uppercase tracking-wider">Account</p>
           </div>
 
           <div className="space-y-1">
@@ -150,11 +150,11 @@ const DashboardLayout = () => {
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+                  <Sparkles className="w-4 h-4 text-foreground" />
                 </div>
                 <span className="font-semibold text-foreground text-sm">Go Premium</span>
               </div>
-              <p className="text-xs text-gray-500 mb-3">Unlock AI coaching & analytics</p>
+              <p className="text-xs text-muted-foreground-500 mb-3">Unlock AI coaching & analytics</p>
               <Button 
                 size="sm" 
                 className="w-full btn-primary rounded-lg text-sm"
@@ -166,11 +166,11 @@ const DashboardLayout = () => {
         </div>
 
         {/* User Section */}
-        <div className="relative p-4 border-t border-white/5">
+        <div className="relative p-4 border-t border-foreground/5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
-                className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
+                className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted/5 transition-colors"
                 data-testid="user-menu-trigger"
               >
                 <Avatar className="w-10 h-10 ring-2 ring-emerald-500/30">
