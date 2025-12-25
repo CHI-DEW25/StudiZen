@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Sparkles,
   HelpCircle,
+  Users,
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -46,6 +47,7 @@ const DashboardLayout = () => {
 
   const secondaryNavItems = [
     { path: '/dashboard/goals', icon: Target, label: 'Goals' },
+    { path: '/dashboard/groups', icon: Users, label: 'Study Groups' },
   ];
 
   const bottomNavItems = [
@@ -73,7 +75,7 @@ const DashboardLayout = () => {
       className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
         isActive(item.path)
           ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 border border-emerald-500/20'
-          : 'text-muted-foreground-500 hover:text-foreground hover:bg-secondary-foreground/5'
+          : 'text-gray-500 hover:text-foreground hover:bg-secondary-foreground/5'
       }`}
     >
       <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-emerald-400' : 'text-muted-foreground-600 group-hover:text-muted-foreground-400'}`} />
