@@ -181,18 +181,18 @@ const DashboardLayout = () => {
                 </Avatar>
                 <div className="flex-1 text-left">
                   <p className="font-medium text-sm text-foreground truncate">{user?.name || 'User'}</p>
-                  <p className="text-xs text-gray-600 truncate">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground-600 truncate">{user?.email}</p>
                 </div>
                 <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end" 
-              className="w-56 rounded-xl bg-[hsl(260,35%,8%)] border border-white/10 shadow-xl"
+              className="w-56 rounded-xl bg-[hsl(260,35%,8%)] border border-border/10 shadow-xl"
             >
               <DropdownMenuItem 
                 onClick={toggleTheme} 
-                className="text-gray-400 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer"
+                className="text-gray-400 hover:text-foreground hover:bg-secondary-foreground/5 rounded-lg cursor-pointer"
                 data-testid="theme-toggle-btn"
               >
                 {theme === 'dark' ? (
@@ -207,13 +207,13 @@ const DashboardLayout = () => {
                   </>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="text-gray-400 hover:text-white hover:bg-white/5 rounded-lg">
+              <DropdownMenuItem asChild className="text-gray-400 hover:text-foreground hover:bg-secondary-foreground/5 rounded-lg">
                 <Link to="/dashboard/settings" data-testid="settings-link">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuSeparator className="bg-secondary-foreground/10" />
               <DropdownMenuItem 
                 onClick={handleLogout} 
                 className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer"
@@ -228,11 +228,11 @@ const DashboardLayout = () => {
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 glass-strong border-b border-white/5">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 glass-strong border-b border-border/5">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5"
+            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-secondary-foreground/5"
             data-testid="mobile-menu-toggle"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -242,11 +242,11 @@ const DashboardLayout = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="font-heading font-bold text-white">StudySmart</span>
+            <span className="font-heading font-bold text-foreground">StudySmart</span>
           </Link>
           
           <button 
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 relative"
+            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-secondary-foreground/5 relative"
             data-testid="notifications-btn"
           >
             <Bell className="w-5 h-5" />
@@ -264,18 +264,18 @@ const DashboardLayout = () => {
       )}
 
       {/* Mobile Sidebar */}
-      <aside className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 sidebar-gradient border-r border-white/5 transform transition-transform ${
+      <aside className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 sidebar-gradient border-r border-border/5 transform transition-transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="absolute top-20 -left-10 w-32 h-32 bg-emerald-600/10 rounded-full blur-[60px]" />
         
-        <div className="p-6 border-b border-white/5">
+        <div className="p-6 border-b border-border/5">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="font-heading text-lg font-bold text-white">StudySmart</span>
+              <span className="font-heading text-lg font-bold text-foreground">StudySmart</span>
               <span className="block text-[10px] text-emerald-400 font-medium tracking-wider">PRODUCTIVITY</span>
             </div>
           </Link>
@@ -295,10 +295,10 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/5">
           <Button
             variant="ghost"
-            className="w-full justify-start text-gray-500 hover:text-white hover:bg-white/5"
+            className="w-full justify-start text-gray-500 hover:text-white hover:bg-secondary-foreground/5"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
