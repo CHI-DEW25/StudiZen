@@ -183,7 +183,7 @@ const DashboardHome = () => {
             data-testid={`stat-card-${stat.title.toLowerCase().replace(' ', '-')}`}
           >
             <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center border border-white/5`}>
+              <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center border border-border/5`}>
                 <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
               </div>
               <div className={`flex items-center gap-1 text-xs font-medium ${
@@ -193,7 +193,7 @@ const DashboardHome = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground-500 mb-1">{stat.title}</p>
-            <p className="text-2xl md:text-3xl font-bold text-white font-mono">
+            <p className="text-2xl md:text-3xl font-bold text-foreground font-mono">
               {stat.value}
               {stat.total && (
                 <span className="text-muted-foreground-600 text-lg">/{stat.total}</span>
