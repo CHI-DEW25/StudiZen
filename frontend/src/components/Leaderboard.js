@@ -157,16 +157,16 @@ const Leaderboard = ({ currentUser, userStats }) => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg" style={{ boxShadow: '0 0 30px rgba(245, 158, 11, 0.3)' }}>
-            <Trophy className="w-6 h-6 text-white" />
+            <Trophy className="w-6 h-6 text-foreground" />
           </div>
           <div>
-            <h2 className="font-heading text-2xl font-bold text-forefround">Student Leaderboard</h2>
+            <h2 className="font-heading text-2xl font-bold text-foreground">Student Leaderboard</h2>
             <p className="text-sm text-muted-foreground-500">Compete with fellow students</p>
           </div>
         </div>
         
         <Select value={timeFilter} onValueChange={setTimeFilter}>
-          <SelectTrigger className="w-32 rounded-xl bg-card-forefround/5 border-border/10 text-foreground" data-testid="time-filter">
+          <SelectTrigger className="w-32 rounded-xl bg-card-foreground/5 border-border/10 text-foreground" data-testid="time-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-[hsl(260,35%,10%)] border-foreground/10 rounded-xl">
@@ -207,7 +207,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-white">{userScore}</span>
+                  <span className="text-2xl font-bold text-foreground">{userScore}</span>
                 </div>
               </div>
               <div>
