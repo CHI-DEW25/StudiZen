@@ -27,7 +27,7 @@ const Settings = () => {
       </div>
 
       {/* Profile Card */}
-      <Card className="bg-card/50 border-white/10 rounded-2xl">
+      <Card className="bg-card/50 border-border/10 rounded-2xl">
         <CardHeader>
           <CardTitle className="font-heading text-lg">Profile</CardTitle>
         </CardHeader>
@@ -65,7 +65,7 @@ const Settings = () => {
       </Card>
 
       {/* Appearance Card */}
-      <Card className="bg-card/50 border-white/10 rounded-2xl">
+      <Card className="bg-card/50 border-border/10 rounded-2xl">
         <CardHeader>
           <CardTitle className="font-heading text-lg">Appearance</CardTitle>
         </CardHeader>

@@ -107,7 +107,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
             style={{ filter: `drop-shadow(0 0 6px ${color}40)` }}
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
           {Math.round(normalizedValue)}
         </span>
       </div>
@@ -157,19 +157,19 @@ const Leaderboard = ({ currentUser, userStats }) => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg" style={{ boxShadow: '0 0 30px rgba(245, 158, 11, 0.3)' }}>
-            <Trophy className="w-6 h-6 text-white" />
+            <Trophy className="w-6 h-6 text-foreground" />
           </div>
           <div>
-            <h2 className="font-heading text-2xl font-bold text-white">Student Leaderboard</h2>
-            <p className="text-sm text-gray-500">Compete with fellow students</p>
+            <h2 className="font-heading text-2xl font-bold text-foreground">Student Leaderboard</h2>
+            <p className="text-sm text-muted-foreground-500">Compete with fellow students</p>
           </div>
         </div>
         
         <Select value={timeFilter} onValueChange={setTimeFilter}>
-          <SelectTrigger className="w-32 rounded-xl bg-white/5 border-white/10 text-white" data-testid="time-filter">
+          <SelectTrigger className="w-32 rounded-xl bg-card-foreground/5 border-border/10 text-foreground" data-testid="time-filter">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[hsl(260,35%,10%)] border-white/10 rounded-xl">
+          <SelectContent className="bg-secondary border-foreground/10 rounded-xl">
             <SelectItem value="weekly">Weekly</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
             <SelectItem value="alltime">All Time</SelectItem>
@@ -207,7 +207,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-white">{userScore}</span>
+                  <span className="text-2xl font-bold text-foreground">{userScore}</span>
                 </div>
               </div>
               <div>
@@ -238,7 +238,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
                       boxShadow: heights[i] > 70 ? '0 0 10px rgba(34, 197, 94, 0.4)' : 'none'
                     }}
                   />
-                  <span className="text-[10px] text-gray-600">{day}</span>
+                  <span className="text-[10px] text-muted-foreground-600">{day}</span>
                 </div>
               );
             })}
@@ -248,8 +248,8 @@ const Leaderboard = ({ currentUser, userStats }) => {
         {/* Recent Achievements */}
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-gray-500">Top Performers</span>
-            <ChevronRight className="w-4 h-4 text-gray-600" />
+            <span className="text-sm text-muted-foreground-500">Top Performers</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground-600" />
           </div>
           <div className="space-y-3">
             {recentAchievements.map((achievement, index) => (
@@ -263,8 +263,8 @@ const Leaderboard = ({ currentUser, userStats }) => {
                    <Medal className="w-4 h-4 text-amber-400" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{achievement.name}</p>
-                  <p className="text-xs text-gray-600">{achievement.user}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{achievement.name}</p>
+                  <p className="text-xs text-muted-foreground-600">{achievement.user}</p>
                 </div>
                 <span className="text-xs font-semibold text-emerald-400">{achievement.reward}</span>
               </div>
@@ -278,20 +278,20 @@ const Leaderboard = ({ currentUser, userStats }) => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">XP</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Focus</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Streak</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Badges</th>
+              <tr className="border-b border-norder/5">
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">#</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">Student</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">Score</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">XP</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">Focus</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">Streak</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground-500 uppercase tracking-wider">Badges</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-gray-500">
+                  <td colSpan="7" className="p-8 text-center text-muted-foreground-500">
                     No leaderboard data yet. Complete tasks and focus sessions to appear here!
                   </td>
                 </tr>
@@ -303,7 +303,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
                   return (
                     <tr
                       key={user.user_id}
-                      className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
+                      className={`border-b border-border/5 hover:bg-white/5 transition-colors ${
                         user.is_current_user ? 'bg-emerald-500/5' : ''
                       }`}
                       data-testid={`leaderboard-row-${user.rank}`}
@@ -317,23 +317,23 @@ const Leaderboard = ({ currentUser, userStats }) => {
                               'text-orange-500 fill-orange-500'
                             }`} />
                           )}
-                          <span className="font-mono font-medium text-white">{user.rank}</span>
+                          <span className="font-mono font-medium text-foreground">{user.rank}</span>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-9 h-9 ring-2 ring-white/10">
+                          <Avatar className="w-9 h-9 ring-2 ring-foreground/10">
                             <AvatarImage src={user.picture} />
                             <AvatarFallback className={`text-xs font-semibold ${
                               user.is_current_user 
-                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white' 
-                                : 'bg-white/10 text-gray-400'
+                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-foreground' 
+                                : 'bg-white/10 text-muted-foreground-400'
                             }`}>
                               {user.name?.split(' ').map(n => n[0]).join('') || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <span className={`font-medium ${user.is_current_user ? 'text-emerald-400' : 'text-white'}`}>
+                            <span className={`font-medium ${user.is_current_user ? 'text-emerald-400' : 'text-foreground'}`}>
                               {user.name}
                             </span>
                             {user.is_current_user && (
@@ -351,7 +351,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
                         </span>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2 text-gray-400">
+                        <div className="flex items-center gap-2 text-muted-foreground-400">
                           <Clock className="w-4 h-4" />
                           <span className="font-mono">{user.focus_hours || 0}h</span>
                         </div>
@@ -367,7 +367,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
                           {badges.map((badge, i) => (
                             <div
                               key={i}
-                              className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center border border-white/10"
+                              className="w-7 h-7 rounded-full bg-foreground/5 flex items-center justify-center border border-foreground/10"
                             >
                               {getBadgeIcon(badge)}
                             </div>

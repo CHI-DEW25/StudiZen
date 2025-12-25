@@ -205,8 +205,8 @@ const StudyGroups = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-white">Study Groups</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="font-heading text-3xl font-bold text-foreground">Study Groups</h1>
+          <p className="text-muted-foreground-500 mt-1">
             {myGroup ? `Member of ${myGroup.name}` : 'Join or create a study group to compete together!'}
           </p>
         </div>
@@ -218,10 +218,10 @@ const StudyGroups = () => {
                 Create Group
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-[hsl(260,35%,10%)] border-white/10 rounded-2xl">
+            <DialogContent className="bg-secondary border-border/10 rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-white font-heading">Create Study Group</DialogTitle>
-                <DialogDescription className="text-gray-400">
+                <DialogTitle className="text-foreground font-heading">Create Study Group</DialogTitle>
+                <DialogDescription className="text-muted-foreground-400">
                   Create a new study group and invite friends to compete together
                 </DialogDescription>
               </DialogHeader>
@@ -233,7 +233,7 @@ const StudyGroups = () => {
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder="e.g., CS Study Squad"
-                    className="mt-1 bg-white/5 border-white/10 rounded-xl"
+                    className="mt-1 bg-primary/5 border-border/10 rounded-xl"
                   />
                 </div>
                 <div>
@@ -243,7 +243,7 @@ const StudyGroups = () => {
                     value={newGroupDesc}
                     onChange={(e) => setNewGroupDesc(e.target.value)}
                     placeholder="What's your group about?"
-                    className="mt-1 bg-white/5 border-white/10 rounded-xl resize-none"
+                    className="mt-1 bg-primary/5 border-border/10 rounded-xl resize-none"
                     rows={3}
                   />
                 </div>
@@ -267,11 +267,11 @@ const StudyGroups = () => {
               <div className="relative flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg glow-green">
-                    <Users className="w-8 h-8 text-white" />
+                    <Users className="w-8 h-8 text-foreground" />
                   </div>
                   <div>
-                    <h2 className="font-heading text-2xl font-bold text-white">{myGroup.name}</h2>
-                    <p className="text-gray-500 text-sm">{myGroup.description || 'No description'}</p>
+                    <h2 className="font-heading text-2xl font-bold text-foreground">{myGroup.name}</h2>
+                    <p className="text-muted-foreground-500 text-sm">{myGroup.description || 'No description'}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <span className="text-xs text-emerald-400 flex items-center gap-1">
                         <Users className="w-3 h-3" /> {myGroup.members?.length || 1} members
@@ -316,24 +316,24 @@ const StudyGroups = () => {
               <TabsContent value="overview" className="mt-6 space-y-6">
                 {/* Members */}
                 <div className="glass-card rounded-2xl p-6">
-                  <h3 className="font-heading text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Users className="w-5 h-5 text-emerald-400" />
                     Members ({myGroup.members?.length || 0})
                   </h3>
                   <div className="space-y-3">
                     {myGroup.members?.map((member, index) => (
-                      <div key={member.user_id} className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                      <div key={member.user_id} className="flex items-center justify-between p-3 rounded-xl bg-primary/5">
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-mono text-gray-500 w-6">#{index + 1}</span>
+                          <span className="text-sm font-mono text-muted-foreground-500 w-6">#{index + 1}</span>
                           <Avatar className="w-10 h-10 ring-2 ring-white/10">
                             <AvatarImage src={member.picture} />
-                            <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                            <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-foreground">
                               {member.name?.charAt(0)?.toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{member.name}</span>
+                              <span className="font-medium text-foreground">{member.name}</span>
                               {member.is_owner && (
                                 <Crown className="w-4 h-4 text-amber-400" />
                               )}
@@ -341,7 +341,7 @@ const StudyGroups = () => {
                                 <span className="text-[10px] text-emerald-500 bg-emerald-500/20 px-2 py-0.5 rounded-full">You</span>
                               )}
                             </div>
-                            <span className="text-xs text-gray-500">{member.weekly_xp || 0} XP this week</span>
+                            <span className="text-xs text-muted-foreground-500">{member.weekly_xp || 0} XP this week</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 text-orange-400">
@@ -360,7 +360,7 @@ const StudyGroups = () => {
                   {/* Messages */}
                   <div className="h-96 overflow-y-auto p-4 space-y-4">
                     {messages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground-500">
                         <MessageCircle className="w-12 h-12 mb-2 opacity-30" />
                         <p>No messages yet. Start the conversation!</p>
                       </div>
@@ -374,7 +374,7 @@ const StudyGroups = () => {
                         >
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={msg.user_picture} />
-                            <AvatarFallback className="bg-white/10 text-xs">
+                            <AvatarFallback className="bg-secondary/10 text-xs">
                               {msg.user_name?.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
@@ -382,15 +382,15 @@ const StudyGroups = () => {
                             msg.user_id === user?.user_id ? 'text-right' : ''
                           }`}>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-gray-400">{msg.user_name}</span>
-                              <span className="text-[10px] text-gray-600">
+                              <span className="text-xs font-medium text-muted-foreground-400">{msg.user_name}</span>
+                              <span className="text-[10px] text-muted-foreground-600">
                                 {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
                             <div className={`px-4 py-2 rounded-2xl ${
                               msg.user_id === user?.user_id
-                                ? 'bg-emerald-500/20 text-emerald-100'
-                                : 'bg-white/5 text-gray-300'
+                                ? 'bg-emerald-500/50 text-emerald-900'
+                                : 'bg-zinc-700/5 text-foreground-300'
                             }`}>
                               <p className="text-sm">{msg.content}</p>
                             </div>
@@ -402,13 +402,13 @@ const StudyGroups = () => {
                   </div>
                   
                   {/* Message Input */}
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5">
+                  <form onSubmit={handleSendMessage} className="p-4 border-t border-border/5">
                     <div className="flex gap-2">
                       <Input
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type a message..."
-                        className="flex-1 bg-white/5 border-white/10 rounded-xl"
+                        className="flex-1 bg-white/5 border-border/10 rounded-xl"
                         data-testid="chat-input"
                       />
                       <Button type="submit" className="btn-primary rounded-xl" data-testid="send-message-btn">
@@ -422,7 +422,7 @@ const StudyGroups = () => {
               {/* Goals Tab */}
               <TabsContent value="goals" className="mt-6 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-heading text-lg font-semibold text-white">Shared Goals</h3>
+                  <h3 className="font-heading text-lg font-semibold text-foreground">Shared Goals</h3>
                   <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
                     <DialogTrigger asChild>
                       <Button size="sm" className="btn-primary rounded-xl" data-testid="create-goal-btn">
@@ -430,10 +430,10 @@ const StudyGroups = () => {
                         New Goal
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[hsl(260,35%,10%)] border-white/10 rounded-2xl">
+                    <DialogContent className="bg-secondary border-border/10 rounded-2xl">
                       <DialogHeader>
-                        <DialogTitle className="text-white font-heading">Create Shared Goal</DialogTitle>
-                        <DialogDescription className="text-gray-400">
+                        <DialogTitle className="text-foreground font-heading">Create Shared Goal</DialogTitle>
+                        <DialogDescription className="text-muted-foreground-400">
                           Create a goal for your team to achieve together
                         </DialogDescription>
                       </DialogHeader>
@@ -445,7 +445,7 @@ const StudyGroups = () => {
                             value={newGoalTitle}
                             onChange={(e) => setNewGoalTitle(e.target.value)}
                             placeholder="e.g., Complete 100 Pomodoros"
-                            className="mt-1 bg-white/5 border-white/10 rounded-xl"
+                            className="mt-1 bg-white/5 border-border/10 rounded-xl"
                           />
                         </div>
                         <div>
@@ -455,7 +455,7 @@ const StudyGroups = () => {
                             value={newGoalDesc}
                             onChange={(e) => setNewGoalDesc(e.target.value)}
                             placeholder="What's this goal about?"
-                            className="mt-1 bg-white/5 border-white/10 rounded-xl resize-none"
+                            className="mt-1 bg-white/5 border-border/10 rounded-xl resize-none"
                             rows={2}
                           />
                         </div>
@@ -466,7 +466,7 @@ const StudyGroups = () => {
                             type="date"
                             value={newGoalDate}
                             onChange={(e) => setNewGoalDate(e.target.value)}
-                            className="mt-1 bg-white/5 border-white/10 rounded-xl"
+                            className="mt-1 bg-white/5 border-border/10 rounded-xl"
                           />
                         </div>
                         <Button onClick={handleCreateGoal} className="w-full btn-primary rounded-xl">
@@ -479,8 +479,8 @@ const StudyGroups = () => {
 
                 {groupGoals.length === 0 ? (
                   <div className="glass-card rounded-2xl p-8 text-center">
-                    <Target className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-500">No shared goals yet. Create one to get started!</p>
+                    <Target className="w-12 h-12 text-muted-foreground-600 mx-auto mb-3" />
+                    <p className="text-muted-foreground-500">No shared goals yet. Create one to get started!</p>
                   </div>
                 ) : (
                   groupGoals.map((goal) => (
@@ -488,12 +488,12 @@ const StudyGroups = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-white">{goal.title}</h4>
+                            <h4 className="font-semibold text-foreground">{goal.title}</h4>
                             {goal.completed && (
                               <CheckCircle className="w-4 h-4 text-emerald-400" />
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">{goal.description}</p>
+                          <p className="text-sm text-muted-foreground-500">{goal.description}</p>
                           {goal.target_date && (
                             <div className="flex items-center gap-1 text-xs text-amber-400 mt-2">
                               <Calendar className="w-3 h-3" />
@@ -514,7 +514,7 @@ const StudyGroups = () => {
                         )}
                       </div>
                       <Progress value={Math.min(goal.progress || 0, 100)} className="h-2 mb-2" />
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground-500">
                         <span>{goal.progress || 0}% progress</span>
                         <span>{goal.contributors?.length || 0} contributions</span>
                       </div>
@@ -529,25 +529,25 @@ const StudyGroups = () => {
           <div className="space-y-6">
             {/* Group Stats */}
             <div className="glass-card rounded-2xl p-6">
-              <h3 className="font-heading text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-400" />
                 Group Stats
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Total XP</span>
+                  <span className="text-muted-foreground-500">Total XP</span>
                   <span className="font-mono font-bold text-emerald-400">{myGroup.total_xp || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Weekly XP</span>
+                  <span className="text-muted-foreground-500">Weekly XP</span>
                   <span className="font-mono font-bold text-violet-400">{myGroup.weekly_xp || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Members</span>
+                  <span className="text-muted-foreground-500">Members</span>
                   <span className="font-mono font-bold text-white">{myGroup.members?.length || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Active Goals</span>
+                  <span className="text-muted-foreground-500">Active Goals</span>
                   <span className="font-mono font-bold text-amber-400">
                     {groupGoals.filter(g => !g.completed).length}
                   </span>
@@ -557,7 +557,7 @@ const StudyGroups = () => {
 
             {/* Group Leaderboard */}
             <div className="glass-card rounded-2xl p-6">
-              <h3 className="font-heading text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-amber-400" />
                 Top Groups
               </h3>
@@ -565,20 +565,20 @@ const StudyGroups = () => {
                 {groupLeaderboard.slice(0, 5).map((group, index) => (
                   <div key={group.group_id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5">
                     <span className={`font-mono font-bold w-6 ${
-                      index === 0 ? 'text-amber-400' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-500'
+                      index === 0 ? 'text-amber-400' : index === 1 ? 'text-muted-foreground-400' : index === 2 ? 'text-orange-500' : 'text-muted-foreground-500'
                     }`}>
                       #{index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-medium truncate ${
-                        group.group_id === myGroup.group_id ? 'text-emerald-400' : 'text-white'
+                        group.group_id === myGroup.group_id ? 'text-emerald-400' : 'text-foreground'
                       }`}>
                         {group.name}
                         {group.group_id === myGroup.group_id && (
                           <span className="ml-2 text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-full">You</span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-600">{group.member_count} members</p>
+                      <p className="text-xs text-muted-foreground-600">{group.member_count} members</p>
                     </div>
                     <span className="text-xs font-mono text-amber-400">{group.xp} XP</span>
                   </div>
@@ -594,12 +594,12 @@ const StudyGroups = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground-500" />
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search study groups..."
-                className="pl-12 h-12 bg-white/5 border-white/10 rounded-xl"
+                className="pl-12 h-12 bg-white/5 border-border/10 rounded-xl"
                 data-testid="search-groups"
               />
             </div>
@@ -608,8 +608,8 @@ const StudyGroups = () => {
             <div className="space-y-4">
               {filteredGroups.length === 0 ? (
                 <div className="glass-card rounded-2xl p-8 text-center">
-                  <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-500">No groups found. Create one to get started!</p>
+                  <Users className="w-12 h-12 text-muted-foreground-600 mx-auto mb-3" />
+                  <p className="text-muted-foreground-500">No groups found. Create one to get started!</p>
                 </div>
               ) : (
                 filteredGroups.map((group) => (
@@ -620,10 +620,10 @@ const StudyGroups = () => {
                           <Users className="w-6 h-6 text-violet-400" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-white">{group.name}</h3>
-                          <p className="text-sm text-gray-500 line-clamp-1">{group.description || 'No description'}</p>
+                          <h3 className="font-semibold text-foreground">{group.name}</h3>
+                          <p className="text-sm text-muted-foreground-500 line-clamp-1">{group.description || 'No description'}</p>
                           <div className="flex items-center gap-4 mt-2">
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground-500 flex items-center gap-1">
                               <Users className="w-3 h-3" /> {group.member_count} members
                             </span>
                             <span className="text-xs text-amber-400 flex items-center gap-1">
@@ -650,7 +650,7 @@ const StudyGroups = () => {
           {/* Group Leaderboard Sidebar */}
           <div className="space-y-6">
             <div className="glass-card rounded-2xl p-6">
-              <h3 className="font-heading text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-amber-400" />
                 Top Groups This Week
               </h3>
@@ -658,13 +658,13 @@ const StudyGroups = () => {
                 {groupLeaderboard.map((group, index) => (
                   <div key={group.group_id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
                     <span className={`font-mono font-bold w-6 ${
-                      index === 0 ? 'text-amber-400' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-500'
+                      index === 0 ? 'text-amber-400' : index === 1 ? 'text-muted-foreground-400' : index === 2 ? 'text-orange-500' : 'text-muted-foreground-500'
                     }`}>
                       #{index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{group.name}</p>
-                      <p className="text-xs text-gray-600">{group.member_count} members</p>
+                      <p className="text-sm font-medium text-foreground truncate">{group.name}</p>
+                      <p className="text-xs text-muted-foreground-600">{group.member_count} members</p>
                     </div>
                     <span className="text-xs font-mono text-amber-400">{group.xp} XP</span>
                   </div>
@@ -677,10 +677,10 @@ const StudyGroups = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/20 rounded-full blur-[50px]" />
               <div className="relative">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-4">
-                  <Plus className="w-6 h-6 text-white" />
+                  <Plus className="w-6 h-6 text-foreground" />
                 </div>
-                <h3 className="font-semibold text-white mb-2">Start Your Own Group</h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <h3 className="font-semibold text-foreground mb-2">Start Your Own Group</h3>
+                <p className="text-sm text-muted-foreground-500 mb-4">
                   Create a study group and invite friends to compete together for bonus XP!
                 </p>
                 <Button onClick={() => setShowCreateGroup(true)} className="w-full btn-primary rounded-xl">

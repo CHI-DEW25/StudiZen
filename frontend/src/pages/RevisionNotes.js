@@ -1,0 +1,1 @@
+<h1 className="font-heading text-3xl font-size-10rem font-bold text-foreground">Revision Notes</h1>
