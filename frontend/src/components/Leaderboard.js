@@ -169,7 +169,7 @@ const Leaderboard = ({ currentUser, userStats }) => {
           <SelectTrigger className="w-32 rounded-xl bg-card-foreground/5 border-border/10 text-foreground" data-testid="time-filter">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[hsl(260,35%,10%)] border-foreground/10 rounded-xl">
+          <SelectContent className="bg-secondary border-foreground/10 rounded-xl">
             <SelectItem value="weekly">Weekly</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
             <SelectItem value="alltime">All Time</SelectItem>
