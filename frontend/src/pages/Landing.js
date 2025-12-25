@@ -236,7 +236,7 @@ const Landing = () => {
 
         {/* Mock Dashboard */}
         <div className="max-w-6xl mx-auto glass-card rounded-3xl p-2 overflow-hidden">
-          <div className="bg-[hsl(260,35%,6%)] rounded-2xl p-6">
+          <div className="bg-secondary rounded-2xl p-6">
             {/* Top bar */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex gap-2">
