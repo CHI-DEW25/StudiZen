@@ -1,0 +1,106 @@
+{
+  "timestamp": "2025-12-23T19:26:27.884115",
+  "total_tests": 13,
+  "passed_tests": 10,
+  "success_rate": 76.9,
+  "failed_tests": [
+    {
+      "test": "Create Task",
+      "success": false,
+      "details": "Status: 200 (Expected 201) - Unknown error",
+      "endpoint": "tasks"
+    },
+    {
+      "test": "Start Pomodoro Session",
+      "success": false,
+      "details": "Status: 200 (Expected 201) - Unknown error",
+      "endpoint": "pomodoro/start"
+    },
+    {
+      "test": "Create Goal",
+      "success": false,
+      "details": "Status: 200 (Expected 201) - Unknown error",
+      "endpoint": "goals"
+    }
+  ],
+  "all_results": [
+    {
+      "test": "API Root",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": ""
+    },
+    {
+      "test": "Health Check",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "health"
+    },
+    {
+      "test": "User Registration",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "auth/register"
+    },
+    {
+      "test": "Get Current User",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "auth/me"
+    },
+    {
+      "test": "Create Task",
+      "success": false,
+      "details": "Status: 200 (Expected 201) - Unknown error",
+      "endpoint": "tasks"
+    },
+    {
+      "test": "Start Pomodoro Session",
+      "success": false,
+      "details": "Status: 200 (Expected 201) - Unknown error",
+      "endpoint": "pomodoro/start"
+    },
+    {
+      "test": "Create Goal",
+      "success": false,
+      "details": "Status: 200 (Expected 201) - Unknown error",
+      "endpoint": "goals"
+    },
+    {
+      "test": "Get Analytics Overview",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "analytics/overview"
+    },
+    {
+      "test": "Get Daily Stats",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "analytics/daily-stats"
+    },
+    {
+      "test": "AI Study Coach",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "ai/study-coach"
+    },
+    {
+      "test": "AI Task Breakdown",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "ai/break-down-task"
+    },
+    {
+      "test": "AI Weekly Summary",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "ai/weekly-summary"
+    },
+    {
+      "test": "AI Burnout Check",
+      "success": true,
+      "details": "Status: 200",
+      "endpoint": "ai/burnout-check"
+    }
+  ]
+}
