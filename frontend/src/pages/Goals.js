@@ -38,6 +38,7 @@ const Goals = () => {
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
   const [editingGoal, setEditingGoal] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
   
@@ -253,14 +254,15 @@ const Goals = () => {
             {activeGoals.map((goal) => (
               <Card
                 key={goal.goal_id}
-                className="bg-card/50 border-white/10 rounded-2xl hover:border-primary/30 transition-colors"
+                className="bg-card/50 border-white/10 rounded-2xl hover:border-primary/30 transition-colors cursor-pointer"
                 data-testid={`goal-card-${goal.goal_id}`}
+                onClick={() => setSelectedGoal(goal)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`goal-menu-${goal.goal_id}`}>
                           <MoreVertical className="w-4 h-4" />
                         </Button>
@@ -359,8 +361,154 @@ const Goals = () => {
           </div>
         </div>
       )}
+
+      {/* Goal Detail Modal with AI Breakdown */}
+      <Dialog open={!!selectedGoal} onOpenChange={() => setSelectedGoal(null)}>
+        <DialogContent className="max-w-2xl rounded-2xl">
+          {selectedGoal && (
+            <GoalModal
+              goal={selectedGoal}
+              refresh={fetchData}
+              close={() => setSelectedGoal(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* --------------------------- MODAL -------------------------------- */
+/* ------------------------------------------------------------------ */
+
+function GoalModal({ goal, refresh, close }) {
+  const subtasks = goal.subtasks || [];
+
+  const calculateProgress = (subs) => {
+    if (!subs.length) return 0;
+    const completed = subs.filter((s) => s.completed).length;
+    return Math.round((completed / subs.length) * 100);
+  };
+
+  const toggleSubtask = async (id) => {
+    const updated = subtasks.map((s) =>
+      s.id === id ? { ...s, completed: !s.completed } : s
+    );
+
+    const progress = calculateProgress(updated);
+
+    await goalsApi.update(goal.goal_id, {
+      subtasks: updated,
+      progress,
+    });
+
+    refresh();
+  };
+
+  const generateAISubtasks = async () => {
+    try {
+      const res = await goalsApi.breakdown(goal.goal_id);
+
+      const aiSubtasks = res.data.map((t) => ({
+        id: crypto.randomUUID(),
+        title: t.title,
+        completed: false,
+      }));
+
+      await goalsApi.update(goal.goal_id, {
+        subtasks: aiSubtasks,
+        progress: 0,
+      });
+
+      toast.success('Goal broken into steps');
+      refresh();
+    } catch {
+      toast.error('AI failed to generate steps');
+    }
+  };
+
+  const markComplete = async () => {
+    await goalsApi.update(goal.goal_id, {
+      completed: !goal.completed,
+      progress: goal.completed ? goal.progress : 100,
+    });
+    refresh();
+    close();
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-2xl">{goal.title}</DialogTitle>
+        {goal.description && (
+          <p className="text-muted-foreground">{goal.description}</p>
+        )}
+      </DialogHeader>
+
+      {/* PROGRESS */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>Progress</span>
+          <span className="font-medium">
+            {Math.round(goal.progress ?? 0)}%
+          </span>
+        </div>
+        <Progress value={goal.progress ?? 0} className="h-3" />
+      </div>
+
+      {/* SUBTASKS */}
+      <div className="space-y-2">
+        <h4 className="font-medium">Steps</h4>
+
+        {subtasks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No steps yet. Break this goal down 👇
+          </p>
+        ) : (
+          subtasks.map((subtask) => (
+            <div
+              key={subtask.id}
+              className="flex items-center gap-2"
+            >
+              <Checkbox
+                checked={subtask.completed}
+                onCheckedChange={() => toggleSubtask(subtask.id)}
+              />
+              <span
+                className={
+                  subtask.completed
+                    ? "line-through text-muted-foreground"
+                    : ""
+                }
+              >
+                {subtask.title}
+              </span>
+            </div>
+          ))
+        )}
+
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={generateAISubtasks}
+        >
+          Break goal into steps (AI)
+        </Button>
+      </div>
+
+      {/* ACTIONS */}
+      <div className="flex justify-between pt-4">
+        <Button variant="outline" onClick={markComplete}>
+          {goal.completed ? "Reopen Goal" : "Mark Complete"}
+        </Button>
+
+        <Button variant="ghost" onClick={close}>
+          Close
+        </Button>
+      </div>
+    </>
+  );
+}
 
 export default Goals;
