@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { goalsApi, tasksApi } from '../lib/api';
+import { breakGoaldown, goalsApi, tasksApi } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -29,9 +29,11 @@ import {
   Target,
   CheckCircle,
   Trophy,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek } from 'date-fns';
+import { motion } from 'framer-motion';
 
 const Goals = () => {
   const [goals, setGoals] = useState([]);
@@ -73,6 +75,8 @@ const Goals = () => {
         ...formData,
         target_tasks: selectedTasks,
         week_start: format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+        streak: 0,
+        progress_logs: [],
       };
 
       if (editingGoal) {
@@ -93,7 +97,10 @@ const Goals = () => {
 
   const handleToggleComplete = async (goal) => {
     try {
-      await goalsApi.update(goal.goal_id, { completed: !goal.completed });
+      await goalsApi.update(goal.goal_id, { 
+        completed: !goal.completed,
+        progress: goal.completed ? goal.progress : 100,
+      });
       fetchData();
       toast.success(goal.completed ? 'Goal reopened' : 'Goal completed! 🎉');
     } catch (error) {
@@ -254,13 +261,20 @@ const Goals = () => {
             {activeGoals.map((goal) => (
               <Card
                 key={goal.goal_id}
-                className="bg-card/50 border-white/10 rounded-2xl hover:border-primary/30 transition-colors cursor-pointer"
+                className="bg-card/50 border-border/10 rounded-2xl hover:border-primary/30 transition-colors cursor-pointer"
                 data-testid={`goal-card-${goal.goal_id}`}
                 onClick={() => setSelectedGoal(goal)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
+                      {goal.streak > 0 && (
+                        <span className="text-sm text-orange-500 flex items-center gap-1">
+                          🔥 {goal.streak}
+                        </span>
+                      )}
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`goal-menu-${goal.goal_id}`}>
@@ -295,9 +309,15 @@ const Goals = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{Math.round(goal.progress)}%</span>
+                      <span className="font-medium">{Math.round(goal.progress || 0)}%</span>
                     </div>
-                    <Progress value={goal.progress} className="h-2" />
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Progress value={goal.progress || 0} className="h-2" />
+                    </motion.div>
                   </div>
                   
                   {goal.target_tasks?.length > 0 && (
@@ -326,7 +346,7 @@ const Goals = () => {
       {completedGoals.length > 0 && (
         <div className="space-y-4">
           <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber" />
+            <Trophy className="w-5 h-5 text-amber-500" />
             Completed ({completedGoals.length})
           </h2>
           
@@ -362,9 +382,9 @@ const Goals = () => {
         </div>
       )}
 
-      {/* Goal Detail Modal with AI Breakdown */}
+      {/* Goal Detail Modal */}
       <Dialog open={!!selectedGoal} onOpenChange={() => setSelectedGoal(null)}>
-        <DialogContent className="max-w-2xl rounded-2xl">
+        <DialogContent className="max-w-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
           {selectedGoal && (
             <GoalModal
               goal={selectedGoal}
@@ -383,7 +403,12 @@ const Goals = () => {
 /* ------------------------------------------------------------------ */
 
 function GoalModal({ goal, refresh, close }) {
+  const [logMinutes, setLogMinutes] = useState("");
+  const [logNote, setLogNote] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const subtasks = goal.subtasks || [];
+  const logs = goal.progress_logs || [];
 
   const calculateProgress = (subs) => {
     if (!subs.length) return 0;
@@ -407,8 +432,9 @@ function GoalModal({ goal, refresh, close }) {
   };
 
   const generateAISubtasks = async () => {
+    setIsGenerating(true);
     try {
-      const res = await goalsApi.breakdown(goal.goal_id);
+      const res = await goalsApi.breakdown(goal.goal_id, {goal: goal.title, description: goal.description || "",});
 
       const aiSubtasks = res.data.map((t) => ({
         id: crypto.randomUUID(),
@@ -421,11 +447,41 @@ function GoalModal({ goal, refresh, close }) {
         progress: 0,
       });
 
-      toast.success('Goal broken into steps');
+      toast.success('Goal broken into steps 🧠');
       refresh();
     } catch {
       toast.error('AI failed to generate steps');
+    } finally {
+      setIsGenerating(false);
     }
+  };
+
+  const logProgress = async () => {
+    if (!logMinutes) {
+      toast.error('Please enter minutes');
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const hasLoggedToday = logs.some((l) => l.date === today);
+
+    const newLog = {
+      date: today,
+      minutes: Number(logMinutes),
+      note: logNote,
+    };
+
+    const newStreak = hasLoggedToday ? goal.streak : (goal.streak || 0) + 1;
+
+    await goalsApi.update(goal.goal_id, {
+      progress_logs: [...logs, newLog],
+      streak: newStreak,
+    });
+
+    toast.success('Progress logged 💪');
+    setLogMinutes("");
+    setLogNote("");
+    refresh();
   };
 
   const markComplete = async () => {
@@ -440,7 +496,12 @@ function GoalModal({ goal, refresh, close }) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-2xl">{goal.title}</DialogTitle>
+        <DialogTitle className="text-2xl flex items-center justify-between">
+          <span>{goal.title}</span>
+          {goal.streak > 0 && (
+            <span className="text-lg text-orange-500">🔥 {goal.streak}</span>
+          )}
+        </DialogTitle>
         {goal.description && (
           <p className="text-muted-foreground">{goal.description}</p>
         )}
@@ -450,15 +511,19 @@ function GoalModal({ goal, refresh, close }) {
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span>Progress</span>
-          <span className="font-medium">
-            {Math.round(goal.progress ?? 0)}%
-          </span>
+          <span className="font-medium">{Math.round(goal.progress ?? 0)}%</span>
         </div>
-        <Progress value={goal.progress ?? 0} className="h-3" />
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 0.6 }}
+        >
+          <Progress value={goal.progress ?? 0} className="h-3" />
+        </motion.div>
       </div>
 
       {/* SUBTASKS */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h4 className="font-medium">Steps</h4>
 
         {subtasks.length === 0 ? (
@@ -466,47 +531,110 @@ function GoalModal({ goal, refresh, close }) {
             No steps yet. Break this goal down 👇
           </p>
         ) : (
-          subtasks.map((subtask) => (
-            <div
-              key={subtask.id}
-              className="flex items-center gap-2"
-            >
-              <Checkbox
-                checked={subtask.completed}
-                onCheckedChange={() => toggleSubtask(subtask.id)}
-              />
-              <span
-                className={
-                  subtask.completed
-                    ? "line-through text-muted-foreground"
-                    : ""
-                }
+          <div className="space-y-2">
+            {subtasks.map((subtask) => (
+              <div
+                key={subtask.id}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
               >
-                {subtask.title}
-              </span>
-            </div>
-          ))
+                <Checkbox
+                  checked={subtask.completed}
+                  onCheckedChange={() => toggleSubtask(subtask.id)}
+                />
+                <span
+                  className={
+                    subtask.completed
+                      ? "line-through text-muted-foreground text-sm"
+                      : "text-sm"
+                  }
+                >
+                  {subtask.title}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
 
         <Button
           size="sm"
           variant="secondary"
           onClick={generateAISubtasks}
+          disabled={isGenerating}
+          className="w-full"
         >
-          Break goal into steps (AI)
+          {isGenerating ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Break goal into steps (AI)
+            </>
+          )}
         </Button>
       </div>
 
+      {/* DAILY LOG */}
+      <div className="space-y-3 pt-2">
+        <h4 className="font-medium">Log Today's Progress</h4>
+        <div className="space-y-2">
+          <Input
+            placeholder="Minutes spent"
+            type="number"
+            value={logMinutes}
+            onChange={(e) => setLogMinutes(e.target.value)}
+            className="rounded-xl"
+          />
+          <Textarea
+            placeholder="Optional note"
+            value={logNote}
+            onChange={(e) => setLogNote(e.target.value)}
+            rows={2}
+            className="rounded-xl"
+          />
+          <Button onClick={logProgress} className="w-full rounded-xl">
+            Log Progress
+          </Button>
+        </div>
+      </div>
+
+      {/* LOG HISTORY */}
+      {logs.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <h4 className="font-medium">Recent History</h4>
+          <div className="space-y-1 text-sm text-muted-foreground max-h-32 overflow-y-auto">
+            {logs.slice(-5).reverse().map((l, i) => (
+              <p key={i} className="p-2 rounded-lg bg-secondary/30">
+                <span className="font-medium">{l.date}:</span> {l.minutes} min
+                {l.note && ` – ${l.note}`}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ACTIONS */}
       <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={markComplete}>
+        <Button variant="outline" onClick={markComplete} className="rounded-xl">
           {goal.completed ? "Reopen Goal" : "Mark Complete"}
         </Button>
-
         <Button variant="ghost" onClick={close}>
           Close
         </Button>
       </div>
+
+      {/* Easter egg */}
+      {goal.progress === 100 && !goal.completed && (
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center text-sm text-green-500 pt-2"
+        >
+          🎉 Goal fully conquered. Mark it complete!
+        </motion.p>
+      )}
     </>
   );
 }

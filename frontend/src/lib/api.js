@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const api = axios.create({
@@ -55,6 +56,7 @@ export const goalsApi = {
   create: (data) => api.post('/goals', data),
   update: (id, data) => api.put(`/goals/${id}`, data),
   delete: (id) => api.delete(`/goals/${id}`),
+  breakdown: (id, title) => api.post(`/goals/${id}/breakdown`, { title }),
 };
 
 // Analytics API
