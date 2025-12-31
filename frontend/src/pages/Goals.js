@@ -434,7 +434,16 @@ function GoalModal({ goal, refresh, close }) {
   const generateAISubtasks = async () => {
     setIsGenerating(true);
     try {
-      const res = await goalsApi.breakdown(goal.goal_id, {goal: goal.title, description: goal.description || "",});
+      const res = await goalsApi.breakdown(goal.goal_id, {
+        goal: goal.title, 
+        description: goal.description || "",
+        completed: goal.completed,
+        subtasks: goal.subtasks,
+        progress: goal.progress,
+        progressLogs: newLogs,
+        streak,
+        lastProgressDate: today
+      });
 
       const aiSubtasks = res.data.map((t) => ({
         id: crypto.randomUUID(),

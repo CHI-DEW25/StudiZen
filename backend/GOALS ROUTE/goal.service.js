@@ -10,6 +10,7 @@ Break the following student goal into 5–7 clear, actionable steps.
 Each step must be achievable in under 2-3 days.
 Define each step concisely and have a clear outcome. 
 They must be actions that are concrete and build momentum.
+Each step must be a SMART goal (Specific, Measurable, Achievable, Relevant, Time-bound).
 Return ONLY valid JSON in this format:
 
 [
@@ -22,7 +23,7 @@ Return ONLY valid JSON in this format:
   { "title": "Step 7" }
 ]
 
-Goal: "${goalTitle} && ${goalDescription}"
+Goal: "${goalTitle} && ${goalDescription} && ${goalDeadline} && ${goalCategory} && ${goalPriority} && ${goalCompleted} && ${goalSubtasks} && ${goalProgress} && ${goalProgressLogs} && ${goalStreak} && ${goalLastProgressDate}"
 `;
 
   const response = await ai.models.generateContent({
@@ -35,5 +36,5 @@ Goal: "${goalTitle} && ${goalDescription}"
 
   // Gemini returns text — parse it
   const text = result.response.text();
-  return JSON.parse(text);  return JSON.parse(response.choices[0].message.content);
+  return JSON.parse(text);
 }
