@@ -750,6 +750,102 @@ async def delete_goal(goal_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Goal not found")
     return {"message": "Goal deleted"}
 
+@api_router.post("/goals/{goal_id}/breakdown")
+async def breakdown_goal(goal_id: str, request: Request, current_user: dict = Depends(get_current_user)):
+    """Break down a goal into actionable steps using AI"""
+    import json
+    
+    body = await request.json()
+    goal_title = body.get("goal") or body.get("title", "")
+    goal_description = body.get("description", "")
+    
+    if not goal_title:
+        raise HTTPException(status_code=400, detail="Goal title is required")
+    
+    # Build the prompt
+    prompt = f"""Break the following student goal into 5–7 clear, actionable steps.
+Each step must be achievable in under 2-3 days.
+Define each step concisely and have a clear outcome. 
+They must be actions that are concrete and build momentum.
+Each step must be a SMART goal (Specific, Measurable, Achievable, Relevant, Time-bound).
+
+Goal: "{goal_title}"
+{f'Description: "{goal_description}"' if goal_description else ''}
+
+Return ONLY valid JSON array in this exact format with NO additional text:
+[
+  {{ "title": "Step 1 description" }},
+  {{ "title": "Step 2 description" }},
+  {{ "title": "Step 3 description" }}
+]"""
+
+    try:
+        # Call OpenAI API
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {os.environ.get('OPENAI_API_KEY')}"
+                },
+                json={
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a helpful assistant that breaks down goals into actionable steps. Always respond with valid JSON only, no additional text."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 1000
+                },
+                timeout=30.0
+            )
+        
+        if response.status_code != 200:
+            logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=500, detail="AI service unavailable")
+        
+        data = response.json()
+        text = data["choices"][0]["message"]["content"]
+        
+        # Clean up the response
+        cleaned_text = text.replace("```json", "").replace("```", "").strip()
+        
+        # Parse JSON
+        steps = json.loads(cleaned_text)
+        
+        if not isinstance(steps, list):
+            raise ValueError("Invalid response format")
+        
+        return steps
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parse error: {e}")
+        # Return fallback steps
+        return [
+            {"title": f"Research and plan approach for: {goal_title}"},
+            {"title": "Break down into smaller tasks"},
+            {"title": "Complete first milestone"},
+            {"title": "Review progress and adjust"},
+            {"title": "Complete remaining work"},
+            {"title": "Final review and completion"}
+        ]
+    except Exception as e:
+        logger.error(f"Goal breakdown error: {e}")
+        # Return fallback steps on any error
+        return [
+            {"title": f"Research and plan approach for: {goal_title}"},
+            {"title": "Break down into smaller tasks"},
+            {"title": "Complete first milestone"},
+            {"title": "Review progress and adjust"},
+            {"title": "Complete remaining work"},
+            {"title": "Final review and completion"}
+        ]
 # ============ LEADERBOARD ROUTES ============
 
 @api_router.get("/leaderboard")

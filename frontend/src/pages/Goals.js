@@ -354,7 +354,7 @@ const Goals = () => {
             {completedGoals.map((goal) => (
               <Card
                 key={goal.goal_id}
-                className="bg-card/30 border-white/5 rounded-2xl opacity-70"
+                className="bg-card/30 border-border/5 rounded-2xl opacity-70"
                 data-testid={`completed-goal-${goal.goal_id}`}
               >
                 <CardContent className="p-4">
