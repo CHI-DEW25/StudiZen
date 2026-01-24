@@ -2141,6 +2141,73 @@ async def get_daily_stats(days: int = 7, current_user: dict = Depends(get_curren
 
 # ============ AI ROUTES ============
 
+@api_router.post("/ai/focus-patterns")
+async def ai_focus_patterns(current_user: dict = Depends(get_current_user)):
+    """Analyze user's focus patterns to find optimal study times"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    user_id = current_user["user_id"]
+    two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).isoformat()
+    
+    # Get sessions from last 2 weeks
+    sessions = await db.pomodoro_sessions.find(
+        {"user_id": user_id, "completed": True, "started_at": {"$gte": two_weeks_ago}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    # Analyze patterns by hour
+    hour_data = {}
+    day_data = {"Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0}
+    
+    for session in sessions:
+        try:
+            started = datetime.fromisoformat(session["started_at"].replace('Z', '+00:00'))
+            hour = started.hour
+            day = started.strftime("%a")
+            
+            if hour not in hour_data:
+                hour_data[hour] = {"sessions": 0, "total_duration": 0}
+            
+            hour_data[hour]["sessions"] += 1
+            hour_data[hour]["total_duration"] += session.get("focus_duration", 25)
+            day_data[day] += session.get("focus_duration", 25)
+        except:
+            continue
+    
+    # Find peak hours
+    peak_hours = sorted(hour_data.items(), key=lambda x: x[1]["sessions"], reverse=True)[:3]
+    peak_days = sorted(day_data.items(), key=lambda x: x[1], reverse=True)[:3]
+    
+    # Build analysis context
+    context = f"""
+    Focus Pattern Analysis (Last 14 days):
+    - Total sessions: {len(sessions)}
+    - Total focus time: {sum(s.get('focus_duration', 25) for s in sessions)} minutes
+    
+    Sessions by hour (top performers):
+    {chr(10).join([f"- {h}:00: {d['sessions']} sessions ({d['total_duration']} min)" for h, d in peak_hours])}
+    
+    Focus time by day of week:
+    {chr(10).join([f"- {day}: {minutes} min" for day, minutes in sorted(day_data.items(), key=lambda x: x[1], reverse=True)])}
+    """
+    
+    chat = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id=f"patterns_{user_id}_{datetime.now().strftime('%Y%m%d')}",
+        system_message="You are a productivity analyst. Analyze the focus patterns and provide 2-3 specific insights about optimal study times. Be data-driven and actionable. Keep response under 100 words."
+    ).with_model("openai", "gpt-4o")
+    
+    message = UserMessage(text=f"Analyze my focus patterns and suggest optimal study times:\n{context}")
+    response = await chat.send_message(message)
+    
+    return {
+        "analysis": response,
+        "peak_hours": [{"hour": h, **d} for h, d in peak_hours],
+        "day_breakdown": [{"day": d, "minutes": m} for d, m in sorted(day_data.items(), key=lambda x: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].index(x[0]))],
+        "total_sessions": len(sessions),
+        "total_focus_minutes": sum(s.get("focus_duration", 25) for s in sessions)
+    }
+
 @api_router.post("/ai/study-coach")
 async def ai_study_coach(current_user: dict = Depends(get_current_user)):
     from emergentintegrations.llm.chat import LlmChat, UserMessage
