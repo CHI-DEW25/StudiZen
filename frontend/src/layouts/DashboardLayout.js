@@ -326,7 +326,7 @@ const DashboardLayout = () => {
           ))}
           
           <div className="pt-4 pb-2">
-            <p className="px-4 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Study Tools</p>
+            <p className="px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Study Tools</p>
           </div>
           
           {secondaryNavItems.map((item) => (
