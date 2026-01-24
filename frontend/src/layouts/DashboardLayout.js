@@ -231,7 +231,7 @@ const DashboardLayout = () => {
             >
               <DropdownMenuItem 
                 onClick={toggleTheme} 
-                className="text-gray-400 hover:text-foreground hover:bg-secondary-foreground/5 rounded-lg cursor-pointer"
+                className="text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg cursor-pointer"
                 data-testid="theme-toggle-btn"
               >
                 {theme === 'dark' ? (
