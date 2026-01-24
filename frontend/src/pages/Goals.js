@@ -21,6 +21,19 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
+import {
   Plus,
   Loader2,
   MoreVertical,
@@ -30,10 +43,34 @@ import {
   CheckCircle,
   Trophy,
   Sparkles,
+  Star,
+  Zap,
+  Book,
+  Heart,
+  Briefcase,
+  Folder,
+  MessageSquare,
+  Calendar,
+  Award,
+  TrendingUp,
+  Clock,
+  ChevronRight,
+  Circle,
+  CheckCircle2,
+  PartyPopper,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, startOfWeek } from 'date-fns';
-import { motion } from 'framer-motion';
+import { format, startOfWeek, differenceInDays } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+
+const CATEGORIES = [
+  { value: 'academic', label: 'Academic', icon: Book, color: 'text-blue-500 bg-blue-500/10' },
+  { value: 'personal', label: 'Personal', icon: Heart, color: 'text-pink-500 bg-pink-500/10' },
+  { value: 'health', label: 'Health', icon: Zap, color: 'text-green-500 bg-green-500/10' },
+  { value: 'career', label: 'Career', icon: Briefcase, color: 'text-purple-500 bg-purple-500/10' },
+  { value: 'other', label: 'Other', icon: Folder, color: 'text-gray-500 bg-gray-500/10' },
+];
 
 const Goals = () => {
   const [goals, setGoals] = useState([]);
@@ -43,10 +80,17 @@ const Goals = () => {
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [editingGoal, setEditingGoal] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [review, setReview] = useState(null);
+  const [isLoadingReview, setIsLoadingReview] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    category: 'academic',
+    deadline: '',
+    xp_reward: 100,
   });
 
   useEffect(() => {
@@ -84,7 +128,7 @@ const Goals = () => {
         toast.success('Goal updated');
       } else {
         await goalsApi.create(goalData);
-        toast.success('Goal created');
+        toast.success('Goal created! 🎯');
       }
       
       fetchData();
@@ -97,12 +141,24 @@ const Goals = () => {
 
   const handleToggleComplete = async (goal) => {
     try {
+      const wasCompleted = goal.completed;
       await goalsApi.update(goal.goal_id, { 
         completed: !goal.completed,
         progress: goal.completed ? goal.progress : 100,
       });
       fetchData();
-      toast.success(goal.completed ? 'Goal reopened' : 'Goal completed! 🎉');
+      
+      if (!wasCompleted) {
+        // Celebration!
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        toast.success('🎉 Goal completed! You earned XP!');
+      } else {
+        toast.success('Goal reopened');
+      }
     } catch (error) {
       toast.error('Failed to update goal');
     }
@@ -123,6 +179,9 @@ const Goals = () => {
     setFormData({
       title: goal.title,
       description: goal.description || '',
+      category: goal.category || 'academic',
+      deadline: goal.deadline || '',
+      xp_reward: goal.xp_reward || 100,
     });
     setSelectedTasks(goal.target_tasks || []);
     setIsDialogOpen(true);
@@ -132,6 +191,9 @@ const Goals = () => {
     setFormData({
       title: '',
       description: '',
+      category: 'academic',
+      deadline: '',
+      xp_reward: 100,
     });
     setSelectedTasks([]);
     setEditingGoal(null);
@@ -145,10 +207,23 @@ const Goals = () => {
     );
   };
 
+  const handleGetReview = async (goal) => {
+    setIsLoadingReview(true);
+    setShowReviewDialog(true);
+    try {
+      const res = await goalsApi.getReview(goal.goal_id);
+      setReview(res.data);
+    } catch (error) {
+      toast.error('Failed to get review');
+      setShowReviewDialog(false);
+    } finally {
+      setIsLoadingReview(false);
+    }
+  };
+
   const handleQuickProgress = async (goal, checked) => {
     try {
       if (checked) {
-        // Add 25% progress when checkbox is clicked
         const newProgress = Math.min((goal.progress || 0) + 25, 100);
         const today = new Date().toISOString().split("T")[0];
         const logs = goal.progress_logs || [];
@@ -169,9 +244,13 @@ const Goals = () => {
           completed: newProgress >= 100,
         });
         
-        toast.success(`+25% progress! ${newProgress >= 100 ? 'Goal completed! 🎉' : ''}`);
+        if (newProgress >= 100) {
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          toast.success('🎉 Goal completed!');
+        } else {
+          toast.success(`+25% progress!`);
+        }
       } else {
-        // Uncheck - reduce progress
         const newProgress = Math.max((goal.progress || 0) - 25, 0);
         await goalsApi.update(goal.goal_id, {
           progress: newProgress,
@@ -185,8 +264,18 @@ const Goals = () => {
     }
   };
 
-  const activeGoals = goals.filter(g => !g.completed);
-  const completedGoals = goals.filter(g => g.completed);
+  const filteredGoals = activeCategory === 'all' 
+    ? goals 
+    : goals.filter(g => g.category === activeCategory);
+
+  const activeGoals = filteredGoals.filter(g => !g.completed);
+  const completedGoals = filteredGoals.filter(g => g.completed);
+
+  // Stats
+  const totalXpEarned = goals.reduce((acc, g) => acc + (g.xp_earned || 0), 0);
+  const totalMilestones = goals.reduce((acc, g) => acc + (g.milestones?.length || 0), 0);
+  const completedMilestones = goals.reduce((acc, g) => 
+    acc + (g.milestones?.filter(m => m.completed)?.length || 0), 0);
 
   if (isLoading) {
     return (
@@ -201,8 +290,8 @@ const Goals = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold">Weekly Goals</h1>
-          <p className="text-muted-foreground">Set and track your weekly objectives</p>
+          <h1 className="font-heading text-3xl font-bold">Goals</h1>
+          <p className="text-muted-foreground">Track your progress and earn rewards</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -215,10 +304,10 @@ const Goals = () => {
               New Goal
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-2xl max-w-lg">
+          <DialogContent className="rounded-2xl max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading">
-                {editingGoal ? 'Edit Goal' : 'New Weekly Goal'}
+                {editingGoal ? 'Edit Goal' : 'New Goal'}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -228,7 +317,7 @@ const Goals = () => {
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Complete Chapter 5 exercises"
+                  placeholder="e.g., Master Calculus Chapter 5"
                   className="rounded-xl"
                   required
                   data-testid="goal-title-input"
@@ -241,16 +330,71 @@ const Goals = () => {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Add more details about this goal..."
+                  placeholder="Add more details..."
                   className="rounded-xl"
-                  rows={3}
+                  rows={2}
                   data-testid="goal-description-input"
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Select 
+                    value={formData.category} 
+                    onValueChange={(val) => setFormData({ ...formData, category: val })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(cat => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          <span className="flex items-center gap-2">
+                            <cat.icon className="w-4 h-4" />
+                            {cat.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Deadline (optional)</Label>
+                  <Input
+                    type="date"
+                    value={formData.deadline}
+                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>XP Reward</Label>
+                <Select 
+                  value={String(formData.xp_reward)} 
+                  onValueChange={(val) => setFormData({ ...formData, xp_reward: parseInt(val) })}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="50">50 XP (Quick goal)</SelectItem>
+                    <SelectItem value="100">100 XP (Standard)</SelectItem>
+                    <SelectItem value="200">200 XP (Major goal)</SelectItem>
+                    <SelectItem value="500">500 XP (Epic goal)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label>Link Tasks (optional)</Label>
-                <div className="max-h-48 overflow-y-auto space-y-2 p-3 rounded-xl bg-secondary/30">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Progress will auto-update as you complete linked tasks
+                </p>
+                <div className="max-h-40 overflow-y-auto space-y-2 p-3 rounded-xl bg-secondary/30">
                   {tasks.filter(t => t.status !== 'completed').length > 0 ? (
                     tasks
                       .filter(t => t.status !== 'completed')
@@ -265,14 +409,15 @@ const Goals = () => {
                             onCheckedChange={() => toggleTaskSelection(task.task_id)}
                           />
                           <span className="text-sm flex-1">{task.title}</span>
-                          {task.subject && (
-                            <span className="text-xs text-muted-foreground">{task.subject}</span>
-                          )}
+                          <span className={`w-2 h-2 rounded-full ${
+                            task.priority === 'high' ? 'bg-red-500' :
+                            task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                          }`} />
                         </div>
                       ))
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No pending tasks available
+                      No pending tasks
                     </p>
                   )}
                 </div>
@@ -289,6 +434,84 @@ const Goals = () => {
         </Dialog>
       </div>
 
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-card/50 border-border/10 rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <Target className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{activeGoals.length}</p>
+                <p className="text-xs text-muted-foreground">Active Goals</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/10 rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <Star className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{totalXpEarned}</p>
+                <p className="text-xs text-muted-foreground">XP Earned</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/10 rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                <Award className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{completedMilestones}/{totalMilestones}</p>
+                <p className="text-xs text-muted-foreground">Milestones</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/10 rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{completedGoals.length}</p>
+                <p className="text-xs text-muted-foreground">Completed</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Category Tabs */}
+      <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+        <TabsList className="bg-secondary/30 p-1 rounded-xl">
+          <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-primary/20">
+            All
+          </TabsTrigger>
+          {CATEGORIES.map(cat => (
+            <TabsTrigger 
+              key={cat.value} 
+              value={cat.value}
+              className="rounded-lg data-[state=active]:bg-primary/20"
+            >
+              <cat.icon className="w-4 h-4 mr-1" />
+              {cat.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
       {/* Active Goals */}
       <div className="space-y-4">
         <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
@@ -299,86 +522,17 @@ const Goals = () => {
         {activeGoals.length > 0 ? (
           <div className="grid md:grid-cols-2 gap-4">
             {activeGoals.map((goal) => (
-              <Card
+              <GoalCard
                 key={goal.goal_id}
-                className="bg-card/50 border-border/10 rounded-2xl hover:border-primary/30 transition-colors cursor-pointer"
-                data-testid={`goal-card-${goal.goal_id}`}
-                onClick={() => setSelectedGoal(goal)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={goal.progress >= 100}
-                        onCheckedChange={(checked) => {
-                          // Stop propagation to prevent opening modal
-                          handleQuickProgress(goal, checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-5 w-5 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        data-testid={`goal-checkbox-${goal.goal_id}`}
-                      />
-                      <div>
-                        <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
-                        {goal.streak > 0 && (
-                          <span className="text-sm text-orange-500 flex items-center gap-1">
-                            🔥 {goal.streak} day streak
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`goal-menu-${goal.goal_id}`}>
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-xl">
-                        <DropdownMenuItem onClick={() => handleToggleComplete(goal)}>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Mark Complete
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(goal)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(goal.goal_id)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {goal.description && (
-                    <p className="text-sm text-muted-foreground">{goal.description}</p>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{Math.round(goal.progress || 0)}%</span>
-                    </div>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Progress value={goal.progress || 0} className="h-2" />
-                    </motion.div>
-                  </div>
-                  
-                  {goal.target_tasks?.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
-                      {goal.target_tasks.length} linked task(s)
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                goal={goal}
+                tasks={tasks}
+                onSelect={() => setSelectedGoal(goal)}
+                onEdit={() => handleEdit(goal)}
+                onDelete={() => handleDelete(goal.goal_id)}
+                onComplete={() => handleToggleComplete(goal)}
+                onQuickProgress={handleQuickProgress}
+                onReview={() => handleGetReview(goal)}
+              />
             ))}
           </div>
         ) : (
@@ -387,7 +541,7 @@ const Goals = () => {
               <Target className="w-12 h-12 text-primary/40 mx-auto mb-4" />
               <h3 className="font-medium mb-1">No active goals</h3>
               <p className="text-sm text-muted-foreground">
-                Set a weekly goal to stay focused on what matters
+                Set a goal to stay focused and earn XP!
               </p>
             </CardContent>
           </Card>
@@ -404,31 +558,12 @@ const Goals = () => {
           
           <div className="grid md:grid-cols-2 gap-4">
             {completedGoals.map((goal) => (
-              <Card
+              <CompletedGoalCard
                 key={goal.goal_id}
-                className="bg-card/30 border-border/5 rounded-2xl opacity-70"
-                data-testid={`completed-goal-${goal.goal_id}`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium line-through">{goal.title}</h3>
-                      <p className="text-xs text-muted-foreground">Completed</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(goal.goal_id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                goal={goal}
+                onDelete={() => handleDelete(goal.goal_id)}
+                onReopen={() => handleToggleComplete(goal)}
+              />
             ))}
           </div>
         </div>
@@ -438,29 +573,264 @@ const Goals = () => {
       <Dialog open={!!selectedGoal} onOpenChange={() => setSelectedGoal(null)}>
         <DialogContent className="max-w-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
           {selectedGoal && (
-            <GoalModal
+            <GoalDetailModal
               goal={selectedGoal}
+              tasks={tasks}
               refresh={fetchData}
               close={() => setSelectedGoal(null)}
             />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="rounded-2xl max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Weekly Review
+            </DialogTitle>
+          </DialogHeader>
+          {isLoadingReview ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : review ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-3 rounded-xl bg-secondary/30">
+                  <p className="text-2xl font-bold">{review.stats.progress.toFixed(0)}%</p>
+                  <p className="text-xs text-muted-foreground">Progress</p>
+                </div>
+                <div className="p-3 rounded-xl bg-secondary/30">
+                  <p className="text-2xl font-bold">🔥 {review.stats.streak}</p>
+                  <p className="text-xs text-muted-foreground">Streak</p>
+                </div>
+                <div className="p-3 rounded-xl bg-secondary/30">
+                  <p className="text-2xl font-bold">{review.stats.xp_earned}</p>
+                  <p className="text-xs text-muted-foreground">XP Earned</p>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <p className="text-sm whitespace-pre-wrap">{review.review}</p>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-/* ------------------------------------------------------------------ */
-/* --------------------------- MODAL -------------------------------- */
-/* ------------------------------------------------------------------ */
+// Goal Card Component
+const GoalCard = ({ goal, tasks, onSelect, onEdit, onDelete, onComplete, onQuickProgress, onReview }) => {
+  const category = CATEGORIES.find(c => c.value === goal.category) || CATEGORIES[0];
+  const CategoryIcon = category.icon;
+  
+  const linkedTasks = tasks.filter(t => goal.target_tasks?.includes(t.task_id));
+  const completedLinkedTasks = linkedTasks.filter(t => t.status === 'completed').length;
+  
+  const completedMilestones = goal.milestones?.filter(m => m.completed)?.length || 0;
+  const totalMilestones = goal.milestones?.length || 0;
+  
+  const daysUntilDeadline = goal.deadline 
+    ? differenceInDays(new Date(goal.deadline), new Date())
+    : null;
 
-function GoalModal({ goal, refresh, close }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card
+        className="bg-card/50 border-border/10 rounded-2xl hover:border-primary/30 transition-colors cursor-pointer overflow-hidden"
+        data-testid={`goal-card-${goal.goal_id}`}
+        onClick={onSelect}
+      >
+        {/* Category Banner */}
+        <div className={`h-1 ${category.color.replace('text-', 'bg-').replace('/10', '')}`} />
+        
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={goal.progress >= 100}
+                onCheckedChange={(checked) => {
+                  onQuickProgress(goal, checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="h-5 w-5 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                data-testid={`goal-checkbox-${goal.goal_id}`}
+              />
+              <div>
+                <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${category.color}`}>
+                    <CategoryIcon className="w-3 h-3 inline mr-1" />
+                    {category.label}
+                  </span>
+                  {goal.streak > 0 && (
+                    <span className="text-xs text-orange-500">🔥 {goal.streak}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-xl">
+                <DropdownMenuItem onClick={onReview}>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Weekly Review
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onComplete}>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Mark Complete
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {goal.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">{goal.description}</p>
+          )}
+          
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium">{Math.round(goal.progress || 0)}%</span>
+            </div>
+            <Progress value={goal.progress || 0} className="h-2" />
+          </div>
+          
+          {/* Milestones Timeline */}
+          {goal.milestones && goal.milestones.length > 0 && (
+            <div className="flex items-center gap-1">
+              {goal.milestones.map((milestone, i) => (
+                <div key={milestone.id} className="flex-1 flex items-center">
+                  <div className={`w-3 h-3 rounded-full ${
+                    milestone.completed ? 'bg-primary' : 'bg-secondary'
+                  }`} />
+                  {i < goal.milestones.length - 1 && (
+                    <div className={`flex-1 h-0.5 ${
+                      milestone.completed ? 'bg-primary' : 'bg-secondary'
+                    }`} />
+                  )}
+                </div>
+              ))}
+              <span className="text-xs text-muted-foreground ml-2">
+                {completedMilestones}/{totalMilestones}
+              </span>
+            </div>
+          )}
+          
+          {/* Footer Info */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-3">
+              {linkedTasks.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {completedLinkedTasks}/{linkedTasks.length} tasks
+                </span>
+              )}
+              {goal.xp_earned > 0 && (
+                <span className="flex items-center gap-1 text-amber-500">
+                  <Star className="w-3 h-3" />
+                  {goal.xp_earned} XP
+                </span>
+              )}
+            </div>
+            {daysUntilDeadline !== null && (
+              <span className={`flex items-center gap-1 ${
+                daysUntilDeadline < 0 ? 'text-red-500' :
+                daysUntilDeadline <= 3 ? 'text-amber-500' : ''
+              }`}>
+                <Calendar className="w-3 h-3" />
+                {daysUntilDeadline < 0 
+                  ? `${Math.abs(daysUntilDeadline)}d overdue`
+                  : daysUntilDeadline === 0 
+                    ? 'Due today'
+                    : `${daysUntilDeadline}d left`}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
+// Completed Goal Card
+const CompletedGoalCard = ({ goal, onDelete, onReopen }) => {
+  const category = CATEGORIES.find(c => c.value === goal.category) || CATEGORIES[0];
+  
+  return (
+    <Card className="bg-card/30 border-border/5 rounded-2xl opacity-70">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-emerald-500" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-medium line-through">{goal.title}</h3>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className={`px-2 py-0.5 rounded-full ${category.color}`}>
+                {category.label}
+              </span>
+              <span className="text-amber-500">+{goal.xp_earned || goal.xp_reward} XP</span>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReopen}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <TrendingUp className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Goal Detail Modal
+const GoalDetailModal = ({ goal, tasks, refresh, close }) => {
   const [logMinutes, setLogMinutes] = useState("");
   const [logNote, setLogNote] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCompletingTask, setIsCompletingTask] = useState(null);
 
+  const category = CATEGORIES.find(c => c.value === goal.category) || CATEGORIES[0];
+  const CategoryIcon = category.icon;
   const subtasks = goal.subtasks || [];
   const logs = goal.progress_logs || [];
+  const linkedTasks = tasks.filter(t => goal.target_tasks?.includes(t.task_id));
 
   const calculateProgress = (subs) => {
     if (!subs.length) return 0;
@@ -472,14 +842,12 @@ function GoalModal({ goal, refresh, close }) {
     const updated = subtasks.map((s) =>
       s.id === id ? { ...s, completed: !s.completed } : s
     );
-
     const progress = calculateProgress(updated);
 
     await goalsApi.update(goal.goal_id, {
       subtasks: updated,
       progress,
     });
-
     refresh();
   };
 
@@ -489,12 +857,6 @@ function GoalModal({ goal, refresh, close }) {
       const res = await goalsApi.breakdown(goal.goal_id, {
         goal: goal.title, 
         description: goal.description || "",
-        completed: goal.completed,
-        subtasks: goal.subtasks || [],
-        progress: goal.progress || 0,
-        progressLogs: goal.progress_logs || [],
-        streak: goal.streak || 0,
-        lastProgressDate: new Date().toISOString().split("T")[0]
       });
 
       const aiSubtasks = res.data.map((t) => ({
@@ -545,11 +907,29 @@ function GoalModal({ goal, refresh, close }) {
     refresh();
   };
 
+  const handleCompleteLinkedTask = async (taskId) => {
+    setIsCompletingTask(taskId);
+    try {
+      await goalsApi.completeTask(goal.goal_id, taskId);
+      toast.success('Task completed! Progress updated 🎯');
+      refresh();
+    } catch (error) {
+      toast.error('Failed to complete task');
+    } finally {
+      setIsCompletingTask(null);
+    }
+  };
+
   const markComplete = async () => {
     await goalsApi.update(goal.goal_id, {
       completed: !goal.completed,
       progress: goal.completed ? goal.progress : 100,
     });
+    
+    if (!goal.completed) {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+    
     refresh();
     close();
   };
@@ -557,42 +937,140 @@ function GoalModal({ goal, refresh, close }) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-2xl flex items-center justify-between">
-          <span>{goal.title}</span>
-          {goal.streak > 0 && (
-            <span className="text-lg text-orange-500">🔥 {goal.streak}</span>
-          )}
-        </DialogTitle>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl ${category.color} flex items-center justify-center`}>
+            <CategoryIcon className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <DialogTitle className="text-xl">{goal.title}</DialogTitle>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-xs px-2 py-0.5 rounded-full ${category.color}`}>
+                {category.label}
+              </span>
+              {goal.streak > 0 && (
+                <span className="text-sm text-orange-500">🔥 {goal.streak} day streak</span>
+              )}
+            </div>
+          </div>
+        </div>
         {goal.description && (
-          <p className="text-muted-foreground">{goal.description}</p>
+          <p className="text-muted-foreground mt-2">{goal.description}</p>
         )}
       </DialogHeader>
 
-      {/* PROGRESS */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Progress</span>
-          <span className="font-medium">{Math.round(goal.progress ?? 0)}%</span>
-        </div>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 0.6 }}
-        >
+      {/* Progress & XP */}
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="p-4 rounded-xl bg-secondary/30">
+          <div className="flex justify-between text-sm mb-2">
+            <span>Progress</span>
+            <span className="font-bold">{Math.round(goal.progress ?? 0)}%</span>
+          </div>
           <Progress value={goal.progress ?? 0} className="h-3" />
-        </motion.div>
+        </div>
+        <div className="p-4 rounded-xl bg-amber-500/10">
+          <div className="flex items-center gap-2">
+            <Star className="w-5 h-5 text-amber-500" />
+            <div>
+              <p className="text-lg font-bold text-amber-500">{goal.xp_earned || 0} XP</p>
+              <p className="text-xs text-muted-foreground">of {goal.xp_reward} XP</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* SUBTASKS */}
-      <div className="space-y-3">
-        <h4 className="font-medium">Steps</h4>
+      {/* Milestones Timeline */}
+      {goal.milestones && goal.milestones.length > 0 && (
+        <div className="mt-6">
+          <h4 className="font-medium mb-3 flex items-center gap-2">
+            <Award className="w-4 h-4 text-violet-400" />
+            Milestones
+          </h4>
+          <div className="space-y-3">
+            {goal.milestones.map((milestone, i) => (
+              <div key={milestone.id} className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  milestone.completed 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-secondary text-muted-foreground'
+                }`}>
+                  {milestone.completed ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    <Circle className="w-4 h-4" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className={`text-sm font-medium ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}>
+                    {milestone.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{milestone.percentage}% • +{milestone.xp_reward} XP</p>
+                </div>
+                {milestone.completed && (
+                  <span className="text-xs text-emerald-500">✓ Done</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
+      {/* Linked Tasks */}
+      {linkedTasks.length > 0 && (
+        <div className="mt-6">
+          <h4 className="font-medium mb-3 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            Linked Tasks ({linkedTasks.filter(t => t.status === 'completed').length}/{linkedTasks.length})
+          </h4>
+          <div className="space-y-2">
+            {linkedTasks.map((task) => (
+              <div 
+                key={task.task_id}
+                className={`flex items-center gap-3 p-3 rounded-lg ${
+                  task.status === 'completed' ? 'bg-emerald-500/10' : 'bg-secondary/30'
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${
+                  task.priority === 'high' ? 'bg-red-500' :
+                  task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                }`} />
+                <span className={`flex-1 text-sm ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                  {task.title}
+                </span>
+                {task.status === 'completed' ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleCompleteLinkedTask(task.task_id)}
+                    disabled={isCompletingTask === task.task_id}
+                    className="h-7 px-2"
+                  >
+                    {isCompletingTask === task.task_id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Done
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Subtasks */}
+      <div className="mt-6">
+        <h4 className="font-medium mb-3">Steps</h4>
         {subtasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mb-3">
             No steps yet. Break this goal down 👇
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 mb-3">
             {subtasks.map((subtask) => (
               <div
                 key={subtask.id}
@@ -602,13 +1080,7 @@ function GoalModal({ goal, refresh, close }) {
                   checked={subtask.completed}
                   onCheckedChange={() => toggleSubtask(subtask.id)}
                 />
-                <span
-                  className={
-                    subtask.completed
-                      ? "line-through text-muted-foreground text-sm"
-                      : "text-sm"
-                  }
-                >
+                <span className={subtask.completed ? "line-through text-muted-foreground text-sm" : "text-sm"}>
                   {subtask.title}
                 </span>
               </div>
@@ -637,9 +1109,9 @@ function GoalModal({ goal, refresh, close }) {
         </Button>
       </div>
 
-      {/* DAILY LOG */}
-      <div className="space-y-3 pt-2">
-        <h4 className="font-medium">Log Today's Progress</h4>
+      {/* Daily Log */}
+      <div className="mt-6">
+        <h4 className="font-medium mb-3">Log Today's Progress</h4>
         <div className="space-y-2">
           <Input
             placeholder="Minutes spent"
@@ -661,10 +1133,10 @@ function GoalModal({ goal, refresh, close }) {
         </div>
       </div>
 
-      {/* LOG HISTORY */}
+      {/* Log History */}
       {logs.length > 0 && (
-        <div className="space-y-2 pt-2">
-          <h4 className="font-medium">Recent History</h4>
+        <div className="mt-6">
+          <h4 className="font-medium mb-3">Recent History</h4>
           <div className="space-y-1 text-sm text-muted-foreground max-h-32 overflow-y-auto">
             {logs.slice(-5).reverse().map((l, i) => (
               <p key={i} className="p-2 rounded-lg bg-secondary/30">
@@ -676,8 +1148,8 @@ function GoalModal({ goal, refresh, close }) {
         </div>
       )}
 
-      {/* ACTIONS */}
-      <div className="flex justify-between pt-4">
+      {/* Actions */}
+      <div className="flex justify-between pt-6 mt-6 border-t border-border/10">
         <Button variant="outline" onClick={markComplete} className="rounded-xl">
           {goal.completed ? "Reopen Goal" : "Mark Complete"}
         </Button>
@@ -688,16 +1160,19 @@ function GoalModal({ goal, refresh, close }) {
 
       {/* Easter egg */}
       {goal.progress === 100 && !goal.completed && (
-        <motion.p 
+        <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center text-sm text-green-500 pt-2"
+          className="text-center mt-4 p-4 rounded-xl bg-emerald-500/10"
         >
-          🎉 Goal fully conquered. Mark it complete!
-        </motion.p>
+          <PartyPopper className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+          <p className="text-sm text-emerald-500 font-medium">
+            🎉 Goal fully conquered! Mark it complete to earn your XP!
+          </p>
+        </motion.div>
       )}
     </>
   );
-}
+};
 
 export default Goals;
