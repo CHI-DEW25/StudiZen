@@ -72,9 +72,11 @@ class TaskCreate(BaseModel):
     subject: Optional[str] = ""
     priority: str = "medium"
     due_date: Optional[str] = None
-    estimated_time: Optional[int] = None
+    estimated_time: Optional[int] = 30  # minutes
     depends_on: Optional[List[str]] = []
     scheduled_time: Optional[str] = None
+    linked_goal_id: Optional[str] = None  # Link to a goal
+    tags: Optional[List[str]] = []
 
 class Task(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -84,13 +86,18 @@ class Task(BaseModel):
     description: str
     subject: str
     priority: str
-    status: str
+    status: str  # pending, in-progress, completed
     due_date: Optional[str]
     estimated_time: Optional[int]
     depends_on: List[str]
     scheduled_time: Optional[str]
     completed_at: Optional[str]
     created_at: str
+    linked_goal_id: Optional[str] = None
+    tags: Optional[List[str]] = []
+    status_history: Optional[List[dict]] = []  # [{status, timestamp, note}]
+    actual_time: Optional[int] = None  # Actual time spent (from Pomodoro)
+    is_overdue: Optional[bool] = False
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
