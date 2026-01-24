@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { tasksApi, aiApi } from '../lib/api';
+import { tasksApi, goalsApi, aiApi } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Checkbox } from '../components/ui/checkbox';
+import { Badge } from '../components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -39,12 +40,19 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  Target,
+  Tag,
+  Filter,
+  Sun,
+  AlertTriangle,
+  Link2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -52,6 +60,7 @@ const Tasks = () => {
   const [aiBreakdown, setAiBreakdown] = useState(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [showTodayOnly, setShowTodayOnly] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -60,16 +69,22 @@ const Tasks = () => {
     priority: 'medium',
     due_date: null,
     estimated_time: '',
+    linked_goal_id: '',
+    tags: '',
   });
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    fetchData();
+  }, [showTodayOnly]);
 
-  const fetchTasks = async () => {
+  const fetchData = async () => {
     try {
-      const response = await tasksApi.getAll();
-      setTasks(response.data);
+      const [tasksRes, goalsRes] = await Promise.all([
+        showTodayOnly ? tasksApi.getToday() : tasksApi.getAll(),
+        goalsApi.getAll(),
+      ]);
+      setTasks(tasksRes.data);
+      setGoals(goalsRes.data.filter(g => !g.completed));
     } catch (error) {
       toast.error('Failed to load tasks');
     } finally {
@@ -82,8 +97,10 @@ const Tasks = () => {
     try {
       const taskData = {
         ...formData,
-        due_date: formData.due_date ? format(formData.due_date, 'dd-MM-yyyy') : null,
+        due_date: formData.due_date ? format(formData.due_date, 'yyyy-MM-dd') : null,
         estimated_time: formData.estimated_time ? parseInt(formData.estimated_time) : null,
+        linked_goal_id: formData.linked_goal_id || null,
+        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       };
 
       if (editingTask) {
@@ -94,7 +111,7 @@ const Tasks = () => {
         toast.success('Task created');
       }
       
-      fetchTasks();
+      fetchData();
       resetForm();
       setIsDialogOpen(false);
     } catch (error) {
@@ -104,19 +121,33 @@ const Tasks = () => {
 
   const handleToggleComplete = async (task) => {
     try {
-      const newStatus = task.status === 'Completed' ? 'Pending' : 'Completed';
+      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
       await tasksApi.update(task.task_id, { status: newStatus });
-      fetchTasks();
-      toast.success(newStatus === 'Completed' ? 'Task completed!' : 'Task reopened');
+      fetchData();
+      if (newStatus === 'completed') {
+        toast.success('Task completed! +XP earned');
+      } else {
+        toast.success('Task reopened');
+      }
     } catch (error) {
       toast.error('Failed to update task');
+    }
+  };
+
+  const handleStatusChange = async (task, newStatus) => {
+    try {
+      await tasksApi.update(task.task_id, { status: newStatus });
+      fetchData();
+      toast.success(`Status changed to ${newStatus}`);
+    } catch (error) {
+      toast.error('Failed to update status');
     }
   };
 
   const handleDelete = async (taskId) => {
     try {
       await tasksApi.delete(taskId);
-      fetchTasks();
+      fetchData();
       toast.success('Task deleted');
     } catch (error) {
       toast.error('Failed to delete task');
@@ -132,6 +163,8 @@ const Tasks = () => {
       priority: task.priority,
       due_date: task.due_date ? new Date(task.due_date) : null,
       estimated_time: task.estimated_time?.toString() || '',
+      linked_goal_id: task.linked_goal_id || '',
+      tags: task.tags?.join(', ') || '',
     });
     setIsDialogOpen(true);
   };
@@ -167,9 +200,10 @@ const Tasks = () => {
           estimated_time: subtask.estimated_minutes,
           priority: formData.priority,
           subject: formData.subject,
+          linked_goal_id: formData.linked_goal_id || null,
         });
       }
-      fetchTasks();
+      fetchData();
       setIsAiDialogOpen(false);
       setAiBreakdown(null);
       toast.success('Subtasks added!');
@@ -186,24 +220,49 @@ const Tasks = () => {
       priority: 'medium',
       due_date: null,
       estimated_time: '',
+      linked_goal_id: '',
+      tags: '',
     });
     setEditingTask(null);
   };
 
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'All') return true;
-    if (filter === 'Completed') return task.status === 'Completed';
-    if (filter === 'Pending') return task.status !== 'Completed';
+    if (filter === 'all') return true;
+    if (filter === 'completed') return task.status === 'completed';
+    if (filter === 'pending') return task.status === 'pending';
+    if (filter === 'in-progress') return task.status === 'in-progress';
+    if (filter === 'overdue') return task.is_overdue;
     return task.priority === filter;
   });
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'urgent': return 'text-destructive bg-destructive/10';
-      case 'high': return 'text-amber bg-amber/10';
-      case 'medium': return 'text-primary bg-primary/10';
+      case 'urgent': return 'text-red-400 bg-red-500/10 border-red-500/20';
+      case 'high': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      case 'medium': return 'text-primary bg-primary/10 border-primary/20';
+      default: return 'text-muted-foreground bg-muted/10 border-muted/20';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'text-green-400 bg-green-500/10';
+      case 'in-progress': return 'text-blue-400 bg-blue-500/10';
       default: return 'text-muted-foreground bg-muted/10';
     }
+  };
+
+  const getLinkedGoalName = (goalId) => {
+    const goal = goals.find(g => g.goal_id === goalId);
+    return goal?.title || 'Unknown goal';
+  };
+
+  // Stats
+  const taskStats = {
+    total: tasks.length,
+    completed: tasks.filter(t => t.status === 'completed').length,
+    pending: tasks.filter(t => t.status === 'pending').length,
+    overdue: tasks.filter(t => t.is_overdue).length,
   };
 
   if (isLoading) {
@@ -233,7 +292,7 @@ const Tasks = () => {
               Add Task
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-2xl max-w-md">
+          <DialogContent className="rounded-2xl max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading">
                 {editingTask ? 'Edit Task' : 'New Task'}
@@ -337,6 +396,46 @@ const Tasks = () => {
                 </div>
               </div>
 
+              {/* Link to Goal */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Link2 className="w-4 h-4" />
+                  Link to Goal (optional)
+                </Label>
+                <Select
+                  value={formData.linked_goal_id}
+                  onValueChange={(value) => setFormData({ ...formData, linked_goal_id: value })}
+                >
+                  <SelectTrigger className="rounded-xl" data-testid="task-goal-select">
+                    <SelectValue placeholder="Select a goal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No goal</SelectItem>
+                    {goals.map((goal) => (
+                      <SelectItem key={goal.goal_id} value={goal.goal_id}>
+                        {goal.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label htmlFor="tags" className="flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  Tags (comma-separated)
+                </Label>
+                <Input
+                  id="tags"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="homework, exam prep, reading"
+                  className="rounded-xl"
+                  data-testid="task-tags-input"
+                />
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <Button
                   type="button"
@@ -397,20 +496,66 @@ const Tasks = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-card/50 border-white/10 rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold font-mono">{taskStats.total}</p>
+            <p className="text-xs text-muted-foreground">Total Tasks</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card/50 border-white/10 rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold font-mono text-green-400">{taskStats.completed}</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card/50 border-white/10 rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold font-mono text-blue-400">{taskStats.pending}</p>
+            <p className="text-xs text-muted-foreground">Pending</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card/50 border-white/10 rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold font-mono text-red-400">{taskStats.overdue}</p>
+            <p className="text-xs text-muted-foreground">Overdue</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {['Pending', 'Completed', 'In Progress', 'All'].map((f) => (
-          <Button
-            key={f}
-            variant={filter === f ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter(f)}
-            className="rounded-full capitalize"
-            data-testid={`filter-${f}-btn`}
-          >
-            {f}
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Filter:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {['all', 'pending', 'in-progress', 'completed', 'overdue'].map((f) => (
+            <Button
+              key={f}
+              variant={filter === f ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter(f)}
+              className="rounded-full capitalize"
+              data-testid={`filter-${f}-btn`}
+            >
+              {f === 'overdue' && <AlertTriangle className="w-3 h-3 mr-1" />}
+              {f}
+            </Button>
+          ))}
+        </div>
+        <div className="flex-1" />
+        <Button
+          variant={showTodayOnly ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setShowTodayOnly(!showTodayOnly)}
+          className="rounded-full"
+          data-testid="today-filter-btn"
+        >
+          <Sun className="w-4 h-4 mr-2" />
+          Today's Tasks
+        </Button>
       </div>
 
       {/* Task List */}
@@ -419,15 +564,15 @@ const Tasks = () => {
           filteredTasks.map((task) => (
             <Card
               key={task.task_id}
-              className={`bg-card/50 border-white/10 rounded-2xl transition-all ${
-                task.status === 'Completed' ? 'opacity-60' : ''
-              }`}
+              className={`bg-card/50 border-white/10 rounded-2xl transition-all hover:border-white/20 ${
+                task.status === 'completed' ? 'opacity-60' : ''
+              } ${task.is_overdue ? 'border-red-500/30' : ''}`}
               data-testid={`task-card-${task.task_id}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <Checkbox
-                    checked={task.status === 'Completed'}
+                    checked={task.status === 'completed'}
                     onCheckedChange={() => handleToggleComplete(task)}
                     className="mt-1 rounded-md"
                     data-testid={`task-checkbox-${task.task_id}`}
@@ -435,12 +580,20 @@ const Tasks = () => {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className={`font-medium ${
-                          task.status === 'Completed' ? 'line-through text-muted-foreground' : ''
-                        }`}>
-                          {task.title}
-                        </h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className={`font-medium ${
+                            task.status === 'completed' ? 'line-through text-muted-foreground' : ''
+                          }`}>
+                            {task.title}
+                          </h3>
+                          {task.is_overdue && (
+                            <Badge variant="destructive" className="h-5 text-[10px]">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Overdue
+                            </Badge>
+                          )}
+                        </div>
                         {task.description && (
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {task.description}
@@ -459,6 +612,14 @@ const Tasks = () => {
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusChange(task, 'pending')}>
+                            <Clock className="w-4 h-4 mr-2" />
+                            Set Pending
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusChange(task, 'in-progress')}>
+                            <Loader2 className="w-4 h-4 mr-2" />
+                            Set In Progress
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDelete(task.task_id)}
                             className="text-destructive"
@@ -471,18 +632,27 @@ const Tasks = () => {
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-2 mt-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
                         {task.priority}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(task.status)}`}>
+                        {task.status}
                       </span>
                       {task.subject && (
                         <span className="px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground">
                           {task.subject}
                         </span>
                       )}
+                      {task.linked_goal_id && (
+                        <span className="flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-violet-500/10 text-violet-400">
+                          <Target className="w-3 h-3" />
+                          {getLinkedGoalName(task.linked_goal_id)}
+                        </span>
+                      )}
                       {task.due_date && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className={`flex items-center gap-1 text-xs ${task.is_overdue ? 'text-red-400' : 'text-muted-foreground'}`}>
                           <CalendarIcon className="w-3 h-3" />
-                          {new Date(task.due_date).toLocaleDateString()}
+                          {task.due_date}
                         </span>
                       )}
                       {task.estimated_time && (
@@ -492,6 +662,17 @@ const Tasks = () => {
                         </span>
                       )}
                     </div>
+
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {task.tags.map((tag, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded text-[10px] bg-primary/10 text-primary">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -503,7 +684,11 @@ const Tasks = () => {
               <CheckCircle className="w-12 h-12 text-primary/40 mx-auto mb-4" />
               <h3 className="font-medium mb-1">No tasks found</h3>
               <p className="text-sm text-muted-foreground">
-                {filter === 'all' ? 'Create your first task to get started' : 'No tasks match this filter'}
+                {filter === 'all' && !showTodayOnly
+                  ? 'Create your first task to get started'
+                  : showTodayOnly
+                  ? "No tasks scheduled for today"
+                  : 'No tasks match this filter'}
               </p>
             </CardContent>
           </Card>
