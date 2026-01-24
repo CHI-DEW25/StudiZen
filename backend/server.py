@@ -1909,7 +1909,7 @@ async def get_group_goals(group_id: str, current_user: dict = Depends(get_curren
     
     return goals
 
-@api_router.post("/groups/{group_id}/goals")
+@api_router.post("/groups/{group_id}/goals", status_code=201)
 async def create_group_goal(
     group_id: str,
     goal_data: GroupGoalCreate,
