@@ -14,7 +14,7 @@ import Tasks from './pages/Tasks';
 import FocusTimer from './pages/FocusTimer';
 import Goals from './pages/Goals';
 import Analytics from './pages/Analytics';
-import StudyGroup
+import StudyGroups from './'
 import Settings from './pages/Settings';
 import Planner from './pages/Planner';
 
