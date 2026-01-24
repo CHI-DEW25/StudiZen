@@ -2955,10 +2955,17 @@ async def health():
 # Include the router in the main app
 app.include_router(api_router)
 
+# Get frontend URL from env or default
+FRONTEND_URLS = [
+    "http://localhost:3000",
+    "https://study-wizard-14.preview.emergentagent.com",
+    os.environ.get("FRONTEND_URL", "http://localhost:3000"),
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=FRONTEND_URLS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
