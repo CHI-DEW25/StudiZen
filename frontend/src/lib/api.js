@@ -52,10 +52,13 @@ export const pomodoroApi = {
 // Goals API
 export const goalsApi = {
   getAll: () => api.get('/goals'),
+  getDetails: (id) => api.get(`/goals/${id}/details`),
   create: (data) => api.post('/goals', data),
   update: (id, data) => api.put(`/goals/${id}`, data),
   delete: (id) => api.delete(`/goals/${id}`),
   breakdown: (id, payload) => api.post(`/goals/${id}/breakdown`, payload),
+  getReview: (id) => api.get(`/goals/${id}/review`),
+  completeTask: (goalId, taskId) => api.post(`/goals/${goalId}/complete-task/${taskId}`),
 };
 
 // Analytics API
