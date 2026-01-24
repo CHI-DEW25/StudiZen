@@ -860,12 +860,35 @@ async def update_goal(goal_id: str, goal_data: GoalUpdate, current_user: dict = 
     
     update_dict = {k: v for k, v in goal_data.model_dump().items() if v is not None}
     
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    
+    # Check for milestone completions and award XP
+    if goal_data.progress is not None or goal_data.milestones is not None:
+        new_progress = goal_data.progress if goal_data.progress is not None else current_goal.get("progress", 0)
+        current_milestones = goal_data.milestones if goal_data.milestones is not None else current_goal.get("milestones", [])
+        xp_earned = current_goal.get("xp_earned", 0)
+        
+        for milestone in current_milestones:
+            if new_progress >= milestone.get("percentage", 0) and not milestone.get("completed"):
+                milestone["completed"] = True
+                milestone_xp = milestone.get("xp_reward", 25)
+                xp_earned += milestone_xp
+                await award_xp(
+                    current_user["user_id"],
+                    milestone_xp,
+                    f"Milestone reached: {milestone.get('title', 'Milestone')} for '{current_goal['title']}'",
+                    user.get("study_group_id")
+                )
+        
+        update_dict["milestones"] = current_milestones
+        update_dict["xp_earned"] = xp_earned
+    
     # Check if goal is being completed
-    if goal_data.completed and not current_goal["completed"]:
-        user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    if goal_data.completed and not current_goal.get("completed"):
+        goal_xp = current_goal.get("xp_reward", 100)
         await award_xp(
             current_user["user_id"],
-            XP_CONFIG["goal_completed"],
+            goal_xp,
             f"Completed goal: {current_goal['title']}",
             user.get("study_group_id")
         )
