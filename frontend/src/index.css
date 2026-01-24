@@ -133,7 +133,7 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .glass-card-hover:hover {
+    .dark .glass-card-hover:hover {
         background: linear-gradient(135deg, 
             rgba(255, 255, 255, 0.08) 0%, 
             rgba(255, 255, 255, 0.04) 100%);
@@ -143,6 +143,17 @@
             0 20px 40px rgba(0, 0, 0, 0.4),
             0 0 60px rgba(34, 197, 94, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    
+    .light .glass-card-hover:hover {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 1) 0%, 
+            rgba(255, 255, 255, 0.9) 100%);
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateY(-4px);
+        box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.15),
+            0 0 60px rgba(34, 197, 94, 0.1);
     }
     
     .glass-strong {
