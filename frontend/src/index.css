@@ -232,11 +232,19 @@
     }
     
     /* Sidebar styles */
-    .sidebar-gradient {
+    .dark .sidebar-gradient {
         background: linear-gradient(180deg, 
             hsl(260, 35%, 8%) 0%, 
             hsl(265, 40%, 6%) 50%, 
             hsl(260, 35%, 4%) 100%);
+    }
+    
+    .light .sidebar-gradient {
+        background: linear-gradient(180deg, 
+            hsl(0, 0%, 100%) 0%, 
+            hsl(220, 14%, 98%) 50%, 
+            hsl(220, 14%, 96%) 100%);
+        border-right: 1px solid hsl(220, 13%, 91%);
     }
     
     /* Ring patterns (like in Puzzle) */
