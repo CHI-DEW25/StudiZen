@@ -337,7 +337,7 @@ const DashboardLayout = () => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/5">
           <Button
             variant="ghost"
-            className="w-full justify-start text-gray-500 hover:text-white hover:bg-secondary-foreground/5"
+            className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary/50"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
