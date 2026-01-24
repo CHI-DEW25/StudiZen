@@ -79,7 +79,7 @@ const DashboardLayout = () => {
       } ${
         isActive(item.path)
           ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 border border-emerald-500/20'
-          : 'text-gray-500 hover:text-foreground hover:bg-secondary-foreground/5'
+          : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
       }`}
     >
       <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-emerald-400' : 'text-muted-foreground-600 group-hover:text-muted-foreground-400'}`} />
