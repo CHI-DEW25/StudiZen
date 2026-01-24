@@ -1423,7 +1423,624 @@ async def ai_burnout_check(current_user: dict = Depends(get_current_user)):
         }
     }
 
-# ============ ROOT & HEALTH ============
+# ============ SMART PLANNER ============
+
+def calculate_priority_score(task: dict) -> float:
+    """Calculate priority score based on priority and urgency"""
+    priority_weights = {"low": 1, "medium": 2, "high": 3}
+    urgency_weights = {"none": 1, "soon": 2, "urgent": 3}
+    
+    priority = task.get("priority", "medium")
+    priority_weight = priority_weights.get(priority, 2)
+    
+    # Calculate urgency from due date
+    urgency = "none"
+    if task.get("due_date"):
+        try:
+            due = datetime.fromisoformat(task["due_date"].replace('Z', '+00:00'))
+            now = datetime.now(timezone.utc)
+            days_until = (due - now).days
+            
+            if days_until <= 1:
+                urgency = "urgent"
+            elif days_until <= 3:
+                urgency = "soon"
+        except:
+            pass
+    
+    urgency_weight = urgency_weights.get(urgency, 1)
+    
+    # Final score: priority * urgency (higher = more important)
+    return priority_weight * urgency_weight
+
+def get_energy_task_filter(energy_level: str, task_priority: str) -> bool:
+    """Filter tasks based on energy level"""
+    if energy_level == "high":
+        return True  # Can do any task
+    elif energy_level == "medium":
+        return task_priority != "urgent"  # Avoid most demanding
+    else:  # low energy
+        return task_priority in ["low", "medium"]  # Only lighter tasks
+
+@api_router.get("/planner/schedule/{date}")
+async def get_schedule(date: str, current_user: dict = Depends(get_current_user)):
+    """Get the schedule for a specific date"""
+    schedule = await db.schedules.find_one(
+        {"user_id": current_user["user_id"], "date": date},
+        {"_id": 0}
+    )
+    
+    if not schedule:
+        return {"schedule_id": None, "date": date, "blocks": [], "energy_level": "medium"}
+    
+    return schedule
+
+@api_router.post("/planner/generate")
+async def generate_schedule(request: ScheduleGenerateRequest, current_user: dict = Depends(get_current_user)):
+    """Generate an AI-optimized daily schedule"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    import json
+    
+    user_id = current_user["user_id"]
+    
+    # Get pending tasks
+    tasks = await db.tasks.find(
+        {"user_id": user_id, "status": {"$ne": "completed"}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Calculate priority scores and filter by energy
+    scored_tasks = []
+    for task in tasks:
+        score = calculate_priority_score(task)
+        task["priority_score"] = score
+        
+        # Energy-based filtering
+        if request.energy_level == "low" and task.get("priority") == "high":
+            task["priority_score"] *= 0.5  # Reduce priority for demanding tasks on low energy days
+        elif request.energy_level == "high" and task.get("priority") == "high":
+            task["priority_score"] *= 1.3  # Boost priority for important tasks on high energy days
+        
+        scored_tasks.append(task)
+    
+    # Sort by priority score (descending)
+    scored_tasks.sort(key=lambda x: x["priority_score"], reverse=True)
+    
+    # Get Google Calendar events if connected
+    google_events = []
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if user and user.get("google_tokens"):
+        try:
+            from google.oauth2.credentials import Credentials
+            from googleapiclient.discovery import build
+            from google.auth.transport.requests import Request as GoogleRequest
+            
+            tokens = user["google_tokens"]
+            creds = Credentials(
+                token=tokens.get('access_token'),
+                refresh_token=tokens.get('refresh_token'),
+                token_uri='https://oauth2.googleapis.com/token',
+                client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+                client_secret=os.environ.get('GOOGLE_CLIENT_SECRET')
+            )
+            
+            if creds.expired and creds.refresh_token:
+                creds.refresh(GoogleRequest())
+                await db.users.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"google_tokens.access_token": creds.token}}
+                )
+            
+            service = build('calendar', 'v3', credentials=creds)
+            
+            # Get events for the requested date
+            date_start = f"{request.date}T00:00:00Z"
+            date_end = f"{request.date}T23:59:59Z"
+            
+            events_result = service.events().list(
+                calendarId='primary',
+                timeMin=date_start,
+                timeMax=date_end,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            google_events = events_result.get('items', [])
+        except Exception as e:
+            logging.warning(f"Failed to fetch Google Calendar events: {e}")
+    
+    # Build context for AI
+    tasks_context = "\n".join([
+        f"- {t['title']} (priority: {t.get('priority', 'medium')}, score: {t['priority_score']:.1f}, est: {t.get('estimated_time', 30)}min)"
+        for t in scored_tasks[:15]  # Top 15 tasks
+    ])
+    
+    events_context = ""
+    if google_events:
+        events_context = "\nExisting calendar events (LOCKED - cannot move):\n" + "\n".join([
+            f"- {e.get('summary', 'Event')} ({e['start'].get('dateTime', e['start'].get('date', ''))[:16]} - {e['end'].get('dateTime', e['end'].get('date', ''))[:16]})"
+            for e in google_events
+        ])
+    
+    ai_prompt = f"""You are a productivity planner.
+
+Given:
+- Energy level: {request.energy_level}
+- Available hours: {request.available_start} to {request.available_end}
+- Pomodoro style: {request.pomodoro_style} (50 min work, 10 min break)
+- Include breaks: {request.include_breaks}
+
+Tasks (sorted by priority score):
+{tasks_context}
+{events_context}
+
+Generate a realistic daily schedule.
+Rules:
+- High priority + urgent tasks first
+- Break tasks into ≤50 minute sessions
+- Include 10 min breaks between work blocks
+- For low energy: schedule easier tasks, more breaks
+- For high energy: tackle harder tasks in morning
+- Avoid scheduling over locked events
+- Return JSON only
+
+Output format:
+{{
+  "schedule": [
+    {{"start": "09:00", "end": "09:50", "type": "task", "title": "Task name", "task_id": "task_xxx"}},
+    {{"start": "09:50", "end": "10:00", "type": "break", "title": "Short break"}},
+    {{"start": "10:00", "end": "10:50", "type": "task", "title": "Another task"}}
+  ],
+  "explanation": "Brief explanation of the schedule logic"
+}}"""
+    
+    chat = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id=f"planner_{user_id}_{request.date}",
+        system_message="You are an AI productivity planner. Generate optimal daily schedules based on task priorities, energy levels, and existing commitments. Always return valid JSON."
+    ).with_model("openai", "gpt-4o")
+    
+    message = UserMessage(text=ai_prompt)
+    response = await chat.send_message(message)
+    
+    # Parse AI response
+    try:
+        json_start = response.find('{')
+        json_end = response.rfind('}') + 1
+        if json_start != -1 and json_end > json_start:
+            ai_schedule = json.loads(response[json_start:json_end])
+        else:
+            raise ValueError("No JSON found")
+    except Exception as e:
+        logging.error(f"Failed to parse AI schedule: {e}")
+        # Fallback: generate rule-based schedule
+        ai_schedule = generate_rule_based_schedule(scored_tasks, request, google_events)
+    
+    # Add Google Calendar events as locked blocks
+    blocks = []
+    for event in google_events:
+        start_dt = event['start'].get('dateTime', event['start'].get('date', ''))
+        end_dt = event['end'].get('dateTime', event['end'].get('date', ''))
+        
+        blocks.append({
+            "id": f"gcal_{event.get('id', uuid.uuid4().hex[:8])}",
+            "start": start_dt[11:16] if 'T' in start_dt else "00:00",
+            "end": end_dt[11:16] if 'T' in end_dt else "23:59",
+            "type": "event",
+            "title": event.get('summary', 'Calendar Event'),
+            "is_locked": True,
+            "color": "#8B5CF6"  # Purple for calendar events
+        })
+    
+    # Add AI-generated schedule blocks
+    for block in ai_schedule.get("schedule", []):
+        block_id = block.get("task_id") or f"block_{uuid.uuid4().hex[:8]}"
+        blocks.append({
+            "id": block_id,
+            "start": block["start"],
+            "end": block["end"],
+            "type": block["type"],
+            "title": block["title"],
+            "task_id": block.get("task_id"),
+            "is_locked": False,
+            "color": "#22C55E" if block["type"] == "task" else "#6B7280"
+        })
+    
+    # Sort blocks by start time
+    blocks.sort(key=lambda x: x["start"])
+    
+    # Save schedule
+    schedule_id = f"sched_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    schedule_doc = {
+        "schedule_id": schedule_id,
+        "user_id": user_id,
+        "date": request.date,
+        "blocks": blocks,
+        "energy_level": request.energy_level,
+        "available_hours": calculate_available_hours(request.available_start, request.available_end),
+        "explanation": ai_schedule.get("explanation", ""),
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    # Upsert: update if exists, insert if not
+    await db.schedules.update_one(
+        {"user_id": user_id, "date": request.date},
+        {"$set": schedule_doc},
+        upsert=True
+    )
+    
+    return schedule_doc
+
+def generate_rule_based_schedule(tasks: list, request: ScheduleGenerateRequest, google_events: list) -> dict:
+    """Fallback rule-based schedule generator"""
+    schedule = []
+    current_time = datetime.strptime(request.available_start, "%H:%M")
+    end_time = datetime.strptime(request.available_end, "%H:%M")
+    
+    work_duration = 50 if request.pomodoro_style else 60
+    break_duration = 10 if request.include_breaks else 0
+    
+    # Get locked event times
+    locked_times = []
+    for event in google_events:
+        start_dt = event['start'].get('dateTime', '')
+        end_dt = event['end'].get('dateTime', '')
+        if start_dt and end_dt:
+            locked_times.append((start_dt[11:16], end_dt[11:16]))
+    
+    task_index = 0
+    while current_time < end_time and task_index < len(tasks):
+        block_start = current_time.strftime("%H:%M")
+        block_end = (current_time + timedelta(minutes=work_duration)).strftime("%H:%M")
+        
+        # Check if this conflicts with a locked event
+        conflicts = False
+        for lock_start, lock_end in locked_times:
+            if block_start < lock_end and block_end > lock_start:
+                conflicts = True
+                # Skip to after the locked event
+                current_time = datetime.strptime(lock_end, "%H:%M")
+                break
+        
+        if conflicts:
+            continue
+        
+        task = tasks[task_index]
+        schedule.append({
+            "start": block_start,
+            "end": block_end,
+            "type": "task",
+            "title": task["title"],
+            "task_id": task.get("task_id")
+        })
+        
+        current_time += timedelta(minutes=work_duration)
+        
+        # Add break
+        if request.include_breaks and current_time < end_time:
+            schedule.append({
+                "start": current_time.strftime("%H:%M"),
+                "end": (current_time + timedelta(minutes=break_duration)).strftime("%H:%M"),
+                "type": "break",
+                "title": "Short break"
+            })
+            current_time += timedelta(minutes=break_duration)
+        
+        task_index += 1
+    
+    return {"schedule": schedule, "explanation": "Rule-based schedule generated as fallback"}
+
+def calculate_available_hours(start: str, end: str) -> float:
+    """Calculate hours between two HH:MM times"""
+    start_dt = datetime.strptime(start, "%H:%M")
+    end_dt = datetime.strptime(end, "%H:%M")
+    return (end_dt - start_dt).seconds / 3600
+
+@api_router.put("/planner/schedule/{date}/block/{block_id}")
+async def update_schedule_block(
+    date: str, 
+    block_id: str, 
+    update: ScheduleBlockUpdate, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a specific block in a schedule (drag-and-drop support)"""
+    schedule = await db.schedules.find_one(
+        {"user_id": current_user["user_id"], "date": date},
+        {"_id": 0}
+    )
+    
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    # Find and update the block
+    blocks = schedule.get("blocks", [])
+    for i, block in enumerate(blocks):
+        if block.get("id") == block_id:
+            if block.get("is_locked"):
+                raise HTTPException(status_code=400, detail="Cannot modify locked blocks")
+            
+            if update.start:
+                blocks[i]["start"] = update.start
+            if update.end:
+                blocks[i]["end"] = update.end
+            if update.task_id is not None:
+                blocks[i]["task_id"] = update.task_id
+            break
+    else:
+        raise HTTPException(status_code=404, detail="Block not found")
+    
+    # Re-sort blocks
+    blocks.sort(key=lambda x: x["start"])
+    
+    await db.schedules.update_one(
+        {"user_id": current_user["user_id"], "date": date},
+        {"$set": {"blocks": blocks, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Block updated", "blocks": blocks}
+
+@api_router.delete("/planner/schedule/{date}/block/{block_id}")
+async def delete_schedule_block(date: str, block_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a block from the schedule"""
+    schedule = await db.schedules.find_one(
+        {"user_id": current_user["user_id"], "date": date},
+        {"_id": 0}
+    )
+    
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    blocks = schedule.get("blocks", [])
+    original_count = len(blocks)
+    blocks = [b for b in blocks if b.get("id") != block_id or b.get("is_locked")]
+    
+    if len(blocks) == original_count:
+        raise HTTPException(status_code=404, detail="Block not found or is locked")
+    
+    await db.schedules.update_one(
+        {"user_id": current_user["user_id"], "date": date},
+        {"$set": {"blocks": blocks, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Block deleted"}
+
+@api_router.post("/planner/reschedule-task/{task_id}")
+async def reschedule_task(task_id: str, current_user: dict = Depends(get_current_user)):
+    """Auto-reschedule a skipped task with increased priority"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    task = await db.tasks.find_one(
+        {"task_id": task_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Increase priority if not already high
+    current_priority = task.get("priority", "medium")
+    new_priority = current_priority
+    if current_priority == "low":
+        new_priority = "medium"
+    elif current_priority == "medium":
+        new_priority = "high"
+    
+    # Update task with increased priority
+    await db.tasks.update_one(
+        {"task_id": task_id},
+        {"$set": {"priority": new_priority, "rescheduled_count": task.get("rescheduled_count", 0) + 1}}
+    )
+    
+    # Generate AI explanation
+    chat = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id=f"reschedule_{task_id}",
+        system_message="You are a productivity assistant. Explain briefly (1-2 sentences) why a task was rescheduled."
+    ).with_model("openai", "gpt-4o")
+    
+    message = UserMessage(text=f"Task '{task['title']}' was rescheduled. Priority changed from {current_priority} to {new_priority}. Explain why this happened and encourage the user.")
+    explanation = await chat.send_message(message)
+    
+    return {
+        "task_id": task_id,
+        "old_priority": current_priority,
+        "new_priority": new_priority,
+        "explanation": explanation
+    }
+
+@api_router.get("/planner/explain/{date}")
+async def explain_schedule(date: str, current_user: dict = Depends(get_current_user)):
+    """AI explains why the schedule was arranged this way"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    schedule = await db.schedules.find_one(
+        {"user_id": current_user["user_id"], "date": date},
+        {"_id": 0}
+    )
+    
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    blocks_summary = "\n".join([
+        f"- {b['start']}-{b['end']}: {b['title']} ({b['type']})"
+        for b in schedule.get("blocks", [])[:10]
+    ])
+    
+    chat = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id=f"explain_{date}",
+        system_message="You are a productivity coach. Explain a daily schedule in a friendly, helpful way. Keep it under 100 words."
+    ).with_model("openai", "gpt-4o")
+    
+    message = UserMessage(text=f"""Explain this schedule for {date} (energy level: {schedule.get('energy_level', 'medium')}):
+{blocks_summary}
+
+Why was it arranged this way? What's the strategy?""")
+    
+    explanation = await chat.send_message(message)
+    
+    return {"date": date, "explanation": explanation}
+
+# ============ GOOGLE CALENDAR INTEGRATION ============
+
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_CALENDAR_REDIRECT_URI', 
+    os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001') + '/api/calendar/callback')
+
+@api_router.get("/calendar/auth-url")
+async def get_calendar_auth_url(current_user: dict = Depends(get_current_user)):
+    """Get Google Calendar OAuth authorization URL"""
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=500, detail="Google Calendar not configured")
+    
+    scopes = "https://www.googleapis.com/auth/calendar.readonly"
+    
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/auth?"
+        f"client_id={GOOGLE_CLIENT_ID}&"
+        f"redirect_uri={GOOGLE_REDIRECT_URI}&"
+        f"scope={scopes}&"
+        f"response_type=code&"
+        f"access_type=offline&"
+        f"prompt=consent&"
+        f"state={current_user['user_id']}"
+    )
+    
+    return {"authorization_url": auth_url}
+
+@api_router.get("/calendar/callback")
+async def calendar_callback(code: str, state: str):
+    """Handle Google Calendar OAuth callback"""
+    # Exchange code for tokens
+    async with httpx.AsyncClient() as client:
+        token_resp = await client.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'redirect_uri': GOOGLE_REDIRECT_URI,
+                'grant_type': 'authorization_code'
+            }
+        )
+    
+    if token_resp.status_code != 200:
+        logging.error(f"Token exchange failed: {token_resp.text}")
+        return Response(
+            content=f"<script>window.opener.postMessage({{type: 'GOOGLE_CALENDAR_ERROR', error: 'Failed to connect'}}, '*'); window.close();</script>",
+            media_type="text/html"
+        )
+    
+    tokens = token_resp.json()
+    
+    # Save tokens to user
+    await db.users.update_one(
+        {"user_id": state},
+        {"$set": {
+            "google_tokens": tokens,
+            "google_calendar_connected": True
+        }}
+    )
+    
+    # Return success and close popup
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:3000').replace('/api', '')
+    return Response(
+        content=f"<script>window.opener.postMessage({{type: 'GOOGLE_CALENDAR_SUCCESS'}}, '*'); window.close();</script>",
+        media_type="text/html"
+    )
+
+@api_router.get("/calendar/events")
+async def get_calendar_events(
+    date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get Google Calendar events for a specific date or today"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    
+    if not user or not user.get("google_tokens"):
+        raise HTTPException(status_code=400, detail="Google Calendar not connected")
+    
+    try:
+        from google.oauth2.credentials import Credentials
+        from googleapiclient.discovery import build
+        from google.auth.transport.requests import Request as GoogleRequest
+        
+        tokens = user["google_tokens"]
+        creds = Credentials(
+            token=tokens.get('access_token'),
+            refresh_token=tokens.get('refresh_token'),
+            token_uri='https://oauth2.googleapis.com/token',
+            client_id=GOOGLE_CLIENT_ID,
+            client_secret=GOOGLE_CLIENT_SECRET
+        )
+        
+        # Refresh if expired
+        if creds.expired and creds.refresh_token:
+            creds.refresh(GoogleRequest())
+            await db.users.update_one(
+                {"user_id": current_user["user_id"]},
+                {"$set": {"google_tokens.access_token": creds.token}}
+            )
+        
+        service = build('calendar', 'v3', credentials=creds)
+        
+        # Default to today if no date provided
+        if not date:
+            date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        
+        date_start = f"{date}T00:00:00Z"
+        date_end = f"{date}T23:59:59Z"
+        
+        events_result = service.events().list(
+            calendarId='primary',
+            timeMin=date_start,
+            timeMax=date_end,
+            singleEvents=True,
+            orderBy='startTime',
+            maxResults=50
+        ).execute()
+        
+        events = []
+        for event in events_result.get('items', []):
+            start = event['start'].get('dateTime', event['start'].get('date', ''))
+            end = event['end'].get('dateTime', event['end'].get('date', ''))
+            
+            events.append({
+                "id": event.get('id'),
+                "title": event.get('summary', 'Untitled Event'),
+                "start": start,
+                "end": end,
+                "is_all_day": 'date' in event['start'],
+                "color": event.get('colorId', '#8B5CF6')
+            })
+        
+        return {"date": date, "events": events}
+        
+    except Exception as e:
+        logging.error(f"Failed to fetch calendar events: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch events: {str(e)}")
+
+@api_router.delete("/calendar/disconnect")
+async def disconnect_calendar(current_user: dict = Depends(get_current_user)):
+    """Disconnect Google Calendar"""
+    await db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$unset": {"google_tokens": ""}, "$set": {"google_calendar_connected": False}}
+    )
+    return {"message": "Google Calendar disconnected"}
+
+@api_router.get("/calendar/status")
+async def get_calendar_status(current_user: dict = Depends(get_current_user)):
+    """Check if Google Calendar is connected"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    return {
+        "connected": bool(user and user.get("google_calendar_connected")),
+        "has_tokens": bool(user and user.get("google_tokens"))
+    }
 
 @api_router.get("/")
 async def root():
