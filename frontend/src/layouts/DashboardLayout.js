@@ -271,7 +271,7 @@ const DashboardLayout = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-secondary-foreground/5"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50"
             data-testid="mobile-menu-toggle"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
