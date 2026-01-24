@@ -42,6 +42,7 @@ const DashboardLayout = () => {
 
   const mainNavItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/dashboard/planner', icon: Calendar, label: 'Smart Planner' },
     { path: '/dashboard/tasks', icon: CheckSquare, label: 'My Tasks' },
     { path: '/dashboard/focus', icon: Timer, label: 'Focus Timer' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Insights', badge: '4' },
