@@ -107,6 +107,12 @@ class TaskUpdate(BaseModel):
     status: Optional[str] = None
     due_date: Optional[str] = None
     estimated_time: Optional[int] = None
+    scheduled_time: Optional[str] = None
+    linked_goal_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    actual_time: Optional[int] = None
+    due_date: Optional[str] = None
+    estimated_time: Optional[int] = None
     depends_on: Optional[List[str]] = None
     scheduled_time: Optional[str] = None
 
