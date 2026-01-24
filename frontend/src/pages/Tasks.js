@@ -82,7 +82,7 @@ const Tasks = () => {
     try {
       const taskData = {
         ...formData,
-        due_date: formData.due_date ? format(formData.due_date, 'yyyy-MM-dd') : null,
+        due_date: formData.due_date ? format(formData.due_date, 'dd-MM-yyyy') : null,
         estimated_time: formData.estimated_time ? parseInt(formData.estimated_time) : null,
       };
 
@@ -104,10 +104,10 @@ const Tasks = () => {
 
   const handleToggleComplete = async (task) => {
     try {
-      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+      const newStatus = task.status === 'Completed' ? 'Pending' : 'Completed';
       await tasksApi.update(task.task_id, { status: newStatus });
       fetchTasks();
-      toast.success(newStatus === 'completed' ? 'Task completed!' : 'Task reopened');
+      toast.success(newStatus === 'Completed' ? 'Task completed!' : 'Task reopened');
     } catch (error) {
       toast.error('Failed to update task');
     }
@@ -191,9 +191,9 @@ const Tasks = () => {
   };
 
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'all') return true;
-    if (filter === 'completed') return task.status === 'completed';
-    if (filter === 'pending') return task.status !== 'completed';
+    if (filter === 'All') return true;
+    if (filter === 'Completed') return task.status === 'Completed';
+    if (filter === 'Pending') return task.status !== 'Completed';
     return task.priority === filter;
   });
 
@@ -399,7 +399,7 @@ const Tasks = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
-        {['all', 'pending', 'completed', 'urgent', 'high'].map((f) => (
+        {['Pending', 'Completed', 'In Progress', 'All'].map((f) => (
           <Button
             key={f}
             variant={filter === f ? 'default' : 'outline'}
@@ -420,14 +420,14 @@ const Tasks = () => {
             <Card
               key={task.task_id}
               className={`bg-card/50 border-white/10 rounded-2xl transition-all ${
-                task.status === 'completed' ? 'opacity-60' : ''
+                task.status === 'Completed' ? 'opacity-60' : ''
               }`}
               data-testid={`task-card-${task.task_id}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <Checkbox
-                    checked={task.status === 'completed'}
+                    checked={task.status === 'Completed'}
                     onCheckedChange={() => handleToggleComplete(task)}
                     className="mt-1 rounded-md"
                     data-testid={`task-checkbox-${task.task_id}`}
@@ -437,7 +437,7 @@ const Tasks = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className={`font-medium ${
-                          task.status === 'completed' ? 'line-through text-muted-foreground' : ''
+                          task.status === 'Completed' ? 'line-through text-muted-foreground' : ''
                         }`}>
                           {task.title}
                         </h3>

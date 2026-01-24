@@ -310,7 +310,22 @@ const FocusTimer = () => {
             {/* Task Selection */}
             <div className="pt-6 border-t border-white/10 mt-6">
               <label className="text-sm font-medium mb-3 block">Link to Task (optional)</label>
-              <Select value={selectedTask || ''} onValueChange={setSelectedTask}>
+              <Select value={selectedTask ?? "none"} onValueChange={(value) => setSelectedTask(value === "none" ? null : value)}>
+                <SelectTrigger className="rounded-xl" data-testid="task-select">
+                  <SelectValue placeholder="Select a task to focus on" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No task</SelectItem>
+                  {tasks.map((task) => (
+                    <SelectItem key={task.task_id} value={task.task_id}>
+                      {task.title}
+                    </SelectItem>
+                ))}
+                </SelectContent>
+              </Select>
+
+
+              {/*<Select value={selectedTask || ''} onValueChange={(val) => setSelectedTask(val === 'none' ? null : val)}>
                 <SelectTrigger className="rounded-xl" data-testid="task-select">
                   <SelectValue placeholder="Select a task to focus on" />
                 </SelectTrigger>
@@ -322,7 +337,7 @@ const FocusTimer = () => {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select>*/}
             </div>
           </CardContent>
         </Card>

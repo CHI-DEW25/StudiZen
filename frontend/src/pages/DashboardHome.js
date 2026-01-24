@@ -83,10 +83,10 @@ const DashboardHome = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-strong rounded-xl p-3 border border-white/10">
-          <p className="text-sm font-medium text-white mb-1">{label}</p>
+        <div className="glass-strong rounded-xl p-3 border border-border/10">
+          <p className="text-sm font-medium text-foreground mb-1">{label}</p>
           {payload.map((entry, index) => (
-            <p key={index} className="text-xs text-gray-400">
+            <p key={index} className="text-xs text-muted-forground-400">
               {entry.name}: <span className="text-emerald-400 font-medium">{entry.value}</span>
             </p>
           ))}
@@ -152,10 +152,10 @@ const DashboardHome = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl md:text-4xl font-bold text-white">
+          <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
             Welcome back, <span className="text-gradient-green">{user?.name?.split(' ')[0] || 'Student'}</span>
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Here's your productivity overview for today
           </p>
         </div>
@@ -183,7 +183,7 @@ const DashboardHome = () => {
             data-testid={`stat-card-${stat.title.toLowerCase().replace(' ', '-')}`}
           >
             <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center border border-white/5`}>
+              <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center border border-border/5`}>
                 <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
               </div>
               <div className={`flex items-center gap-1 text-xs font-medium ${
@@ -192,15 +192,15 @@ const DashboardHome = () => {
                 {stat.isPositive ? '↑' : '↓'} {stat.change}
               </div>
             </div>
-            <p className="text-sm text-gray-500 mb-1">{stat.title}</p>
-            <p className="text-2xl md:text-3xl font-bold text-white font-mono">
+            <p className="text-sm text-muted-foreground-500 mb-1">{stat.title}</p>
+            <p className="text-2xl md:text-3xl font-bold text-foreground font-mono">
               {stat.value}
               {stat.total && (
-                <span className="text-gray-600 text-lg">/{stat.total}</span>
+                <span className="text-muted-foreground-600 text-lg">/{stat.total}</span>
               )}
             </p>
             {stat.subtitle && (
-              <p className="text-xs text-gray-600 mt-1">{stat.subtitle}</p>
+              <p className="text-xs text-muted-foreground-600 mt-1">{stat.subtitle}</p>
             )}
           </div>
         ))}
@@ -212,8 +212,8 @@ const DashboardHome = () => {
         <div className="lg:col-span-2 glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="font-heading text-lg font-semibold text-white">Focus Time This Week</h3>
-              <p className="text-sm text-gray-500">Your daily productivity trends</p>
+              <h3 className="font-heading text-lg font-semibold text-foreground">Focus Time This Week</h3>
+              <p className="text-sm text-muted-foreground-500">Your daily productivity trends</p>
             </div>
             <div className="flex items-center gap-2 text-xs text-emerald-400">
               <ArrowUpRight className="w-4 h-4" />
@@ -265,38 +265,38 @@ const DashboardHome = () => {
           <div className="relative">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg glow-green">
-                <Sparkles className="w-5 h-5 text-white" />
+                <Sparkles className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-white">AI Study Coach</h3>
-                <p className="text-xs text-gray-500">Personalized insights</p>
+                <h3 className="font-heading font-semibold text-foreground">AI Study Coach</h3>
+                <p className="text-xs text-muted-foreground-500">Personalized insights</p>
               </div>
             </div>
 
             {aiAdvice ? (
               <div className="space-y-4">
-                <p className="text-sm text-gray-400 leading-relaxed">
+                <p className="text-sm text-muted-foreground-400 leading-relaxed">
                   {aiAdvice.advice}
                 </p>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-center p-3 rounded-xl bg-card border border-white/5">
                     <p className="text-lg font-bold text-emerald-400 font-mono">{aiAdvice.data_summary.tasks_completed}</p>
-                    <p className="text-[10px] text-gray-500 uppercase">Tasks</p>
+                    <p className="text-[10px] text-muted-foreground-500 uppercase">Tasks</p>
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-center p-3 rounded-xl bg-card/5 border border-white/5">
                     <p className="text-lg font-bold text-violet-400 font-mono">{aiAdvice.data_summary.focus_time_hours}h</p>
-                    <p className="text-[10px] text-gray-500 uppercase">Focus</p>
+                    <p className="text-[10px] text-muted-foreground-500 uppercase">Focus</p>
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-center p-3 rounded-xl bg-card/5 border border-white/5">
                     <p className="text-lg font-bold text-amber-400 font-mono">{aiAdvice.data_summary.sessions_completed}</p>
-                    <p className="text-[10px] text-gray-500 uppercase">Sessions</p>
+                    <p className="text-[10px] text-muted-foreground-500 uppercase">Sessions</p>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-6">
                 <Brain className="w-12 h-12 text-emerald-500/30 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground-500">
                   Click "Get AI Advice" for personalized tips
                 </p>
               </div>
@@ -331,9 +331,9 @@ const DashboardHome = () => {
         {/* Recent Tasks */}
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-heading text-lg font-semibold text-white">Pending Tasks</h3>
+            <h3 className="font-heading text-lg font-semibold text-foreground">Pending Tasks</h3>
             <Link to="/dashboard/tasks">
-              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white rounded-lg" data-testid="view-all-tasks-btn">
+              <Button variant="ghost" size="sm" className="text-muted-foreground-400 hover:text-white rounded-lg" data-testid="view-all-tasks-btn">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
@@ -344,7 +344,7 @@ const DashboardHome = () => {
               recentTasks.map((task) => (
                 <div
                   key={task.task_id}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-card-foreground/5 border border-foreground/5 hover:bg-secondary-foreground/10 transition-colors"
                 >
                   <div className={`w-3 h-3 rounded-full ${
                     task.priority === 'urgent' ? 'bg-red-500' :
@@ -352,13 +352,13 @@ const DashboardHome = () => {
                     task.priority === 'medium' ? 'bg-emerald-500' : 'bg-gray-500'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-white truncate">{task.title}</p>
+                    <p className="font-medium text-sm text-foreground truncate">{task.title}</p>
                     {task.subject && (
-                      <p className="text-xs text-gray-500">{task.subject}</p>
+                      <p className="text-xs text-muted-foreground-500">{task.subject}</p>
                     )}
                   </div>
                   {task.due_date && (
-                    <span className="text-xs text-gray-500 bg-white/5 px-2 py-1 rounded-lg">
+                    <span className="text-xs text-muted-foreground-500 bg-card-foreground/5 px-2 py-1 rounded-lg">
                       {new Date(task.due_date).toLocaleDateString()}
                     </span>
                   )}
@@ -367,7 +367,7 @@ const DashboardHome = () => {
             ) : (
               <div className="text-center py-8">
                 <CheckCircle className="w-12 h-12 text-emerald-500/30 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">All caught up! No pending tasks.</p>
+                <p className="text-sm text-muted-foreground-600">All caught up! No pending tasks.</p>
               </div>
             )}
           </div>
@@ -375,50 +375,50 @@ const DashboardHome = () => {
 
         {/* Quick Actions */}
         <div className="glass-card rounded-2xl p-6">
-          <h3 className="font-heading text-lg font-semibold text-white mb-6">Quick Actions</h3>
+          <h3 className="font-heading text-lg font-semibold text-foreground mb-6">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-4">
             <Link to="/dashboard/tasks">
               <button
-                className="w-full p-6 rounded-xl bg-white/5 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/20 transition-all group"
+                className="w-full p-6 rounded-xl bg-card-foreground/5 border border-foreground/5 hover:bg-emerald-500/10 hover:border-emerald-500/20 transition-all group"
                 data-testid="quick-add-task-btn"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                   <CheckCircle className="w-6 h-6 text-emerald-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Add Task</span>
+                <span className="text-sm font-medium text-foreground">Add Task</span>
               </button>
             </Link>
             <Link to="/dashboard/focus">
               <button
-                className="w-full p-6 rounded-xl bg-white/5 border border-white/5 hover:bg-violet-500/10 hover:border-violet-500/20 transition-all group"
+                className="w-full p-6 rounded-xl bg-card-foreground/5 border border-foreground/5 hover:bg-violet-500/10 hover:border-violet-500/20 transition-all group"
                 data-testid="quick-start-focus-btn"
               >
                 <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                   <Timer className="w-6 h-6 text-violet-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Start Focus</span>
+                <span className="text-sm font-medium text-foreground">Start Focus</span>
               </button>
             </Link>
             <Link to="/dashboard/goals">
               <button
-                className="w-full p-6 rounded-xl bg-white/5 border border-white/5 hover:bg-amber-500/10 hover:border-amber-500/20 transition-all group"
+                className="w-full p-6 rounded-xl bg-card-foreground/5 border border-border/5 hover:bg-amber-500/10 hover:border-amber-500/20 transition-all group"
                 data-testid="quick-set-goal-btn"
               >
                 <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                   <Target className="w-6 h-6 text-amber-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Set Goal</span>
+                <span className="text-sm font-medium text-foreground">Set Goal</span>
               </button>
             </Link>
             <Link to="/dashboard/analytics">
               <button
-                className="w-full p-6 rounded-xl bg-white/5 border border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all group"
+                className="w-full p-6 rounded-xl bg-card-foreground/5 border border-foreground/5 hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all group"
                 data-testid="quick-view-stats-btn"
               >
                 <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                   <BarChart3 className="w-6 h-6 text-cyan-400" />
                 </div>
-                <span className="text-sm font-medium text-white">View Stats</span>
+                <span className="text-sm font-medium text-foreground">View Stats</span>
               </button>
             </Link>
           </div>
