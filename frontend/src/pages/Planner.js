@@ -691,7 +691,8 @@ const Planner = () => {
 const DailyView = ({ 
   schedule, 
   blocks, 
-  tasks, 
+  tasks,
+  goals,
   isLoading, 
   totalWorkMinutes, 
   calendarStatus,
