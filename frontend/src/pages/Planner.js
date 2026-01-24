@@ -866,17 +866,21 @@ const DailyView = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {tasks.slice(0, 8).map((task) => (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {tasks.slice(0, 6).map((task) => (
                   <div
                     key={task.task_id}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/30 transition-colors"
                   >
                     <div className={`w-2 h-2 rounded-full ${
-                      task.priority === 'high' ? 'bg-red-500' :
+                      task.priority === 'urgent' ? 'bg-red-500' :
+                      task.priority === 'high' ? 'bg-orange-500' :
                       task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
                     }`} />
                     <span className="text-sm flex-1 truncate">{task.title}</span>
+                    {task.is_overdue && (
+                      <Badge variant="destructive" className="text-[10px] h-4 px-1">Overdue</Badge>
+                    )}
                     {task.estimated_time && (
                       <span className="text-xs text-muted-foreground">{task.estimated_time}m</span>
                     )}
@@ -890,6 +894,34 @@ const DailyView = ({
               </div>
             </CardContent>
           </Card>
+
+          {/* Active Goals */}
+          {goals && goals.length > 0 && (
+            <Card className="bg-card/50 border-border/10 rounded-2xl">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-heading text-lg flex items-center gap-2">
+                  <Target className="w-5 h-5 text-violet-400" />
+                  Active Goals ({goals.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {goals.slice(0, 4).map((goal) => (
+                    <div key={goal.goal_id} className="p-2 rounded-lg bg-secondary/30">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium truncate pr-2">{goal.title}</span>
+                        <span className="text-xs text-muted-foreground">{Math.round(goal.progress || 0)}%</span>
+                      </div>
+                      <Progress value={goal.progress || 0} className="h-1.5" />
+                      {goal.category && (
+                        <span className="text-[10px] text-primary mt-1 inline-block">{goal.category}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Calendar Status */}
           <Card className="bg-card/50 border-border/10 rounded-2xl">
