@@ -3,6 +3,7 @@ import { pomodoroApi, tasksApi } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
+import { Badge } from '../components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -21,8 +22,20 @@ import {
   Trophy,
   Volume2,
   VolumeX,
+  Target,
+  Zap,
+  TrendingUp,
+  Clock,
+  CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const PRESETS = [
+  { name: 'Classic', focus: 25, break: 5 },
+  { name: 'Extended', focus: 50, break: 10 },
+  { name: 'Short Burst', focus: 15, break: 3 },
+  { name: 'Deep Work', focus: 90, break: 20 },
+];
 
 const FocusTimer = () => {
   const [focusDuration, setFocusDuration] = useState(25);
@@ -36,6 +49,10 @@ const FocusTimer = () => {
   const [stats, setStats] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [sessionsToday, setSessionsToday] = useState(0);
+  const [totalMinutesToday, setTotalMinutesToday] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [recentSessions, setRecentSessions] = useState([]);
+  const [dailyGoal, setDailyGoal] = useState(8);
   
   const intervalRef = useRef(null);
   const audioRef = useRef(null);
@@ -43,9 +60,10 @@ const FocusTimer = () => {
   useEffect(() => {
     fetchTasks();
     fetchStats();
+    fetchRecentSessions();
     
     // Create audio element for notifications
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdG2MkZaZnJmYm5mWko6DfHZ1c3J0dXV4e36Bg4WHi4+Sk5WZnZ6en52bmJWTkY+Mh4J+fHp4d3Z2dnh6fH+BhIiLjo+RlJibnZ6fn56cmpmXlZKPi4eDf3x7enl4d3h5e32Ag4aJjI+Rk5WYm52en5+fnpyamJaTkI2JhoN/fXt6eHd3eHl7foCDhoqNkJKUl5qcnp+fn56dnJqYlpOQjYqHhIB+fHp5eHh4eXt9gIOGiYyPkpSXmpydnp+fnp6cm5mWk5CNioeDgH58e3l4eHh5e32Ag4aJjI+SlJeam52en5+fnp2cmpmXlJGOi4eDgH58e3l4d3h5e32AgoaJjI+RlJeam52en5+fn56cm5mWlJGOi4eDgH58enl4eHh5fH6BhIeKjZCSlZibnZ6fn5+fnZybmZeTkI2KhoOAf314eHh4eXt+gYSHio2Qk5WYm52en5+fn56dnJqYlZKPjIiEgX98enl4eHh6fH6BhYiLjpGUl5qcnp+fn5+enZyamJWSkY6LiISBfnx6eHh4eXt9gIOGiYyPkpSXmpydnp+fn56dnJqYlpOQjYqHg4B+fHt5eHh4enx+gYSHio2QkpWYm52en5+fn56dnJqYlpKPjIqGg4B+fHp5eHh4ent+gYSHio2Qk5WYm52en5+fnp6dnJqYlZKPjIqGg4B+fHp5eHd4ent+gYSHioyPkpWYm52en5+fnp2cm5qYlZKPjIqGgn5+fHp4d3d5ent+gYWIi46RlJeam52en5+fnp2cm5mXlJGOi4eFgn9+fHp5eHh5e31/goWIi46RlJeam52en5+fnp2cm5mWk5CNioeEgX9+fHp5eHh5e31/goWIi46RlJeam52en5+fnp6dm5mXlJGOi4eDgH5+fHp4eHh6e31/goWIi46RlJeam52en5+fnp2cm5qXlJGOi4eDgH58fHp5eHh5e31/goWIi46RlJeam52en5+fnp2cmpmXlJGOi4eDgH58e3p5eHh5e32AgoaJjI+SlJeam52en5+fnp2cmpmWk5CNioeEgX98e3p5eHh5en2AgoaJjI+SlZibnZ6fn5+fnp2cmpmWk5CNioeEgH9+fHp5eHh5en1/goWIi46Rk5aZm52fn5+fnp2cm5mXlJGOioeDgH9+fHp5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWlJGOi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWlJGOi4eDgH58e3p4eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWk5CNi4eEgX98e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWlJGOi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWk5CNi4eDgH98e3p5eHh5e31/goWIi46RlJaZnJ2fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5en1/goWIi46RlJaZnJ2fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5en2AgoaJjI+SlZibnZ6fn5+fnp2cmpmWk5CNioeEgH98e3p5eHh5en1/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHg=');
+    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdG2MkZaZnJmYm5mWko6DfHZ1c3J0dXV4e36Bg4WHi4+Sk5WZnZ6en52bmJWTkY+Mh4J+fHp4d3Z2dnh6fH+BhIiLjo+RlJibnZ6fn56cmpmXlZKPi4eDf3x7enl4d3h5e32Ag4aJjI+Rk5WYm52en5+fnpyamJaTkI2JhoN/fXt6eHd3eHl7foCDhoqNkJKUl5qcnp+fn56dnJqYlpOQjYqHhIB+fHp5eHh4eXt9gIOGiYyPkpSXmpydnp+fnp6cm5mWk5CNioeDgH58e3p5eHh4eXt9gIOGiYyPkpSXmpydnp+fnp6cm5mWlJGOi4eDgH58e3p5eHh5e32Ag4aJjI+RlJeam52en5+fnp2cmpmXlJGOi4eDgH58e3p5eHh5e32Ag4aJjI+RlJeam52en5+fn56cm5mWlJGOi4eDgH58e3l4eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWk5CNi4eEgX98e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWlJGOi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46Rk5aZnJ2fn5+fnp2cm5mWk5CNi4eDgH98e3p5eHh5e31/goWIi46RlJaZnJ2fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5en1/goWIi46RlJaZnJ2fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5en2AgoaJjI+SlZibnZ6fn5+fnp2cmpmWk5CNioeEgH98e3p5eHh5en1/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHh5e31/goWIi46RlJeam52fn5+fnp2cm5mWk5CNi4eDgH58e3p5eHg=');
     
     return () => {
       if (intervalRef.current) {
@@ -68,16 +86,43 @@ const FocusTimer = () => {
       const response = await pomodoroApi.getStats();
       setStats(response.data);
       setSessionsToday(response.data.today_sessions);
+      setTotalMinutesToday(response.data.today_sessions * focusDuration);
     } catch (error) {
       console.error('Failed to fetch stats');
     }
   };
 
-  const playSound = () => {
+  const fetchRecentSessions = async () => {
+    try {
+      const response = await pomodoroApi.getSessions(7);
+      setRecentSessions(response.data.slice(0, 10));
+      
+      // Calculate streak from sessions
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      const completedDates = new Set(
+        response.data
+          .filter(s => s.completed)
+          .map(s => new Date(s.started_at).toDateString())
+      );
+      
+      let currentStreak = 0;
+      let checkDate = new Date();
+      while (completedDates.has(checkDate.toDateString())) {
+        currentStreak++;
+        checkDate = new Date(checkDate.getTime() - 86400000);
+      }
+      setStreak(currentStreak);
+    } catch (error) {
+      console.error('Failed to fetch sessions');
+    }
+  };
+
+  const playSound = useCallback(() => {
     if (soundEnabled && audioRef.current) {
       audioRef.current.play().catch(() => {});
     }
-  };
+  }, [soundEnabled]);
 
   const startTimer = async () => {
     if (!isRunning && !currentSession && !isBreak) {
@@ -89,6 +134,7 @@ const FocusTimer = () => {
           task_id: selectedTask,
         });
         setCurrentSession(response.data);
+        toast.success('Focus session started! Stay concentrated.');
       } catch (error) {
         toast.error('Failed to start session');
         return;
@@ -132,7 +178,9 @@ const FocusTimer = () => {
         try {
           await pomodoroApi.complete(currentSession.session_id);
           setSessionsToday(prev => prev + 1);
-          toast.success('Focus session complete! Time for a break.');
+          setTotalMinutesToday(prev => prev + focusDuration);
+          toast.success(`Focus session complete! +25 XP earned. Time for a ${breakDuration} min break.`);
+          fetchRecentSessions();
         } catch (error) {
           console.error('Failed to complete session');
         }
@@ -148,6 +196,17 @@ const FocusTimer = () => {
     }
   }, [isBreak, currentSession, breakDuration, focusDuration, playSound]);
 
+  const applyPreset = (preset) => {
+    if (isRunning) {
+      toast.error('Stop the timer first to change presets');
+      return;
+    }
+    setFocusDuration(preset.focus);
+    setBreakDuration(preset.break);
+    setTimeLeft(preset.focus * 60);
+    toast.success(`Applied ${preset.name} preset`);
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -158,12 +217,24 @@ const FocusTimer = () => {
     ? ((breakDuration * 60 - timeLeft) / (breakDuration * 60)) * 100
     : ((focusDuration * 60 - timeLeft) / (focusDuration * 60)) * 100;
 
+  const dailyProgress = (sessionsToday / dailyGoal) * 100;
+
   return (
     <div className="space-y-6" data-testid="focus-timer-page">
       {/* Header */}
-      <div>
-        <h1 className="font-heading text-3xl font-bold">Focus Timer</h1>
-        <p className="text-muted-foreground">Stay focused with the Pomodoro technique</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-3xl font-bold">Focus Timer</h1>
+          <p className="text-muted-foreground">Stay focused with the Pomodoro technique</p>
+        </div>
+        
+        {/* Streak Badge */}
+        {streak > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+            <Flame className="w-5 h-5 text-amber-400" />
+            <span className="font-bold text-amber-400">{streak} day streak!</span>
+          </div>
+        )}
       </div>
 
       {/* Main Timer Card */}
@@ -179,6 +250,11 @@ const FocusTimer = () => {
                 <span className="text-sm font-medium">
                   {isBreak ? 'Break Time' : 'Focus Time'}
                 </span>
+                {selectedTask && !isBreak && (
+                  <Badge variant="secondary" className="ml-2">
+                    Working on task
+                  </Badge>
+                )}
               </div>
               
               <div className="relative w-64 h-64 mx-auto mb-8">
@@ -260,6 +336,26 @@ const FocusTimer = () => {
               </div>
             </div>
 
+            {/* Presets */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {PRESETS.map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => applyPreset(preset)}
+                  className={`rounded-full ${
+                    focusDuration === preset.focus && breakDuration === preset.break
+                      ? 'bg-primary/20 border-primary'
+                      : ''
+                  }`}
+                  disabled={isRunning}
+                >
+                  {preset.name} ({preset.focus}/{preset.break})
+                </Button>
+              ))}
+            </div>
+
             {/* Timer Settings */}
             <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-white/10">
               <div className="space-y-3">
@@ -276,7 +372,7 @@ const FocusTimer = () => {
                     }
                   }}
                   min={5}
-                  max={60}
+                  max={90}
                   step={5}
                   disabled={isRunning}
                   className="w-full"
@@ -309,7 +405,10 @@ const FocusTimer = () => {
 
             {/* Task Selection */}
             <div className="pt-6 border-t border-white/10 mt-6">
-              <label className="text-sm font-medium mb-3 block">Link to Task (optional)</label>
+              <label className="text-sm font-medium mb-3 block flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Link to Task (optional)
+              </label>
               <Select value={selectedTask ?? "none"} onValueChange={(value) => setSelectedTask(value === "none" ? null : value)}>
                 <SelectTrigger className="rounded-xl" data-testid="task-select">
                   <SelectValue placeholder="Select a task to focus on" />
@@ -318,26 +417,18 @@ const FocusTimer = () => {
                   <SelectItem value="none">No task</SelectItem>
                   {tasks.map((task) => (
                     <SelectItem key={task.task_id} value={task.task_id}>
-                      {task.title}
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${
+                          task.priority === 'urgent' ? 'bg-red-400' :
+                          task.priority === 'high' ? 'bg-amber-400' :
+                          task.priority === 'medium' ? 'bg-primary' : 'bg-muted'
+                        }`} />
+                        {task.title}
+                      </div>
                     </SelectItem>
                 ))}
                 </SelectContent>
               </Select>
-
-
-              {/*<Select value={selectedTask || ''} onValueChange={(val) => setSelectedTask(val === 'none' ? null : val)}>
-                <SelectTrigger className="rounded-xl" data-testid="task-select">
-                  <SelectValue placeholder="Select a task to focus on" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No task</SelectItem>
-                  {tasks.map((task) => (
-                    <SelectItem key={task.task_id} value={task.task_id}>
-                      {task.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>*/}
             </div>
           </CardContent>
         </Card>
@@ -348,21 +439,31 @@ const FocusTimer = () => {
           <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20 rounded-2xl">
             <CardHeader>
               <CardTitle className="font-heading text-lg flex items-center gap-2">
-                <Flame className="w-5 h-5 text-primary" />
+                <Zap className="w-5 h-5 text-primary" />
                 Today's Progress
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <p className="text-5xl font-bold font-mono text-primary" data-testid="sessions-today">
                   {sessionsToday}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">sessions completed</p>
               </div>
-              <Progress value={(sessionsToday / 8) * 100} className="mt-4 h-2" />
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                {Math.max(0, 8 - sessionsToday)} more to daily goal
-              </p>
+              <Progress value={Math.min(dailyProgress, 100)} className="h-2 mb-2" />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{sessionsToday} / {dailyGoal} goal</span>
+                <span>{Math.round(dailyProgress)}%</span>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total focus time</span>
+                  <span className="font-mono font-bold">
+                    {Math.floor(totalMinutesToday / 60)}h {totalMinutesToday % 60}m
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -371,7 +472,7 @@ const FocusTimer = () => {
             <Card className="bg-card/50 border-white/10 rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-heading text-lg flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber" />
+                  <TrendingUp className="w-5 h-5 text-green-400" />
                   This Week
                 </CardTitle>
               </CardHeader>
@@ -392,19 +493,68 @@ const FocusTimer = () => {
                     {stats.average_daily_sessions.toFixed(1)} sessions
                   </span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Current Streak</span>
+                  <span className="font-mono font-bold text-amber-400 flex items-center gap-1">
+                    <Flame className="w-4 h-4" />
+                    {streak} days
+                  </span>
+                </div>
               </CardContent>
             </Card>
           )}
 
+          {/* Recent Sessions */}
+          <Card className="bg-card/50 border-white/10 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="font-heading text-lg flex items-center gap-2">
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                Recent Sessions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentSessions.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No sessions yet. Start your first focus session!
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {recentSessions.map((session) => (
+                    <div
+                      key={session.session_id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        {session.completed ? (
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                        )}
+                        <span>{session.focus_duration} min</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(session.started_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Tips */}
           <Card className="bg-card/50 border-white/10 rounded-2xl">
             <CardContent className="p-6">
-              <h3 className="font-medium mb-3">Pomodoro Tips</h3>
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                Pomodoro Tips
+              </h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>• Focus on one task at a time</li>
                 <li>• Take breaks away from screen</li>
                 <li>• Stretch during breaks</li>
                 <li>• Stay hydrated</li>
+                <li>• Complete 4 sessions for a long break</li>
               </ul>
             </CardContent>
           </Card>
