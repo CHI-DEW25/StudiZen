@@ -748,6 +748,15 @@ async def get_pomodoro_stats(current_user: dict = Depends(get_current_user)):
 @api_router.post("/goals", response_model=Goal, status_code=201)
 async def create_goal(goal_data: GoalCreate, current_user: dict = Depends(get_current_user)):
     goal_id = f"goal_{uuid.uuid4().hex[:12]}"
+    
+    # Generate default milestones if not provided
+    milestones = goal_data.milestones or [
+        {"id": f"ms_{uuid.uuid4().hex[:8]}", "title": "Getting Started", "percentage": 25, "completed": False, "xp_reward": 25},
+        {"id": f"ms_{uuid.uuid4().hex[:8]}", "title": "Halfway There", "percentage": 50, "completed": False, "xp_reward": 50},
+        {"id": f"ms_{uuid.uuid4().hex[:8]}", "title": "Almost Done", "percentage": 75, "completed": False, "xp_reward": 75},
+        {"id": f"ms_{uuid.uuid4().hex[:8]}", "title": "Goal Complete!", "percentage": 100, "completed": False, "xp_reward": 100},
+    ]
+    
     goal_doc = {
         "goal_id": goal_id,
         "user_id": current_user["user_id"],
@@ -760,6 +769,11 @@ async def create_goal(goal_data: GoalCreate, current_user: dict = Depends(get_cu
         "streak": goal_data.streak or 0,
         "subtasks": [],
         "progress_logs": goal_data.progress_logs or [],
+        "category": goal_data.category or "academic",
+        "milestones": milestones,
+        "xp_reward": goal_data.xp_reward or 100,
+        "deadline": goal_data.deadline,
+        "xp_earned": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.goals.insert_one(goal_doc)
@@ -777,19 +791,63 @@ async def get_goals(current_user: dict = Depends(get_current_user)):
         if goal.get("subtasks") and len(goal["subtasks"]) > 0:
             completed_subtasks = len([s for s in goal["subtasks"] if s.get("completed")])
             goal["progress"] = (completed_subtasks / len(goal["subtasks"])) * 100
-        elif goal["target_tasks"]:
-            completed_tasks = await db.tasks.count_documents({
-                "task_id": {"$in": goal["target_tasks"]},
-                "status": "completed"
-            })
-            goal["progress"] = (completed_tasks / len(goal["target_tasks"])) * 100
+        elif goal.get("target_tasks") and len(goal["target_tasks"]) > 0:
+            # Get linked tasks and calculate progress
+            linked_tasks = await db.tasks.find(
+                {"task_id": {"$in": goal["target_tasks"]}},
+                {"_id": 0}
+            ).to_list(100)
+            
+            if linked_tasks:
+                completed_tasks = len([t for t in linked_tasks if t.get("status") == "completed"])
+                goal["progress"] = (completed_tasks / len(linked_tasks)) * 100
+                goal["linked_tasks_data"] = linked_tasks  # Include task details
         
         # Ensure default values for new fields
         goal.setdefault("streak", 0)
         goal.setdefault("subtasks", [])
         goal.setdefault("progress_logs", [])
+        goal.setdefault("category", "academic")
+        goal.setdefault("milestones", [])
+        goal.setdefault("xp_reward", 100)
+        goal.setdefault("xp_earned", 0)
+        goal.setdefault("deadline", None)
+        
+        # Auto-update milestones based on progress
+        progress = goal.get("progress", 0)
+        for milestone in goal.get("milestones", []):
+            if progress >= milestone.get("percentage", 0) and not milestone.get("completed"):
+                milestone["completed"] = True
     
-    return [Goal(**g) for g in goals]
+    return [Goal(**{k: v for k, v in g.items() if k != "linked_tasks_data"}) for g in goals]
+
+# New endpoint to get goal with linked task details
+@api_router.get("/goals/{goal_id}/details")
+async def get_goal_details(goal_id: str, current_user: dict = Depends(get_current_user)):
+    goal = await db.goals.find_one(
+        {"goal_id": goal_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    # Get linked tasks with full details
+    linked_tasks = []
+    if goal.get("target_tasks"):
+        linked_tasks = await db.tasks.find(
+            {"task_id": {"$in": goal["target_tasks"]}},
+            {"_id": 0}
+        ).to_list(100)
+    
+    # Calculate progress from linked tasks
+    if linked_tasks:
+        completed = len([t for t in linked_tasks if t.get("status") == "completed"])
+        goal["progress"] = (completed / len(linked_tasks)) * 100
+    
+    return {
+        **goal,
+        "linked_tasks_data": linked_tasks
+    }
 
 @api_router.put("/goals/{goal_id}", response_model=Goal)
 async def update_goal(goal_id: str, goal_data: GoalUpdate, current_user: dict = Depends(get_current_user)):
