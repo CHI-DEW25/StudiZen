@@ -86,9 +86,19 @@ export const groupsApi = {
   getAll: (search) => api.get('/groups', { params: { search } }),
   getById: (id) => api.get(`/groups/${id}`),
   getMyCurrent: () => api.get('/groups/my/current'),
-  create: (data) => api.post('/groups', data),
-  join: (id) => api.post(`/groups/${id}/join`),
-  leave: (id) => api.post(`/groups/${id}/leave`),
+  getMyGroups: () => api.get('/groups/my/all'),
+  create: (data) => api.post('/groups/v2', data),
+  join: (id) => api.post(`/groups/${id}/join/v2`),
+  leave: (id) => api.post(`/groups/${id}/leave/v2`),
+  getDetails: (id) => api.get(`/groups/${id}/details`),
+  setPrimary: (id) => api.post(`/groups/${id}/set-primary`),
+  // Chat
+  getMessages: (id, limit = 50) => api.get(`/groups/${id}/messages`, { params: { limit } }),
+  sendMessage: (id, content) => api.post(`/groups/${id}/messages`, { content }),
+  // Goals
+  getGoals: (id) => api.get(`/groups/${id}/goals`),
+  createGoal: (id, data) => api.post(`/groups/${id}/goals`, data),
+  contributeToGoal: (groupId, goalId) => api.post(`/groups/${groupId}/goals/${goalId}/contribute`),
 };
 
 // Planner API
