@@ -126,6 +126,10 @@ class GoalCreate(BaseModel):
     week_start: str
     streak: Optional[int] = 0
     progress_logs: Optional[List[dict]] = []
+    category: Optional[str] = "academic"  # academic, personal, health, career, other
+    milestones: Optional[List[dict]] = []  # [{id, title, percentage, completed, xp_reward}]
+    xp_reward: Optional[int] = 100  # Base XP for completing the goal
+    deadline: Optional[str] = None
 
 class Goal(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -141,6 +145,11 @@ class Goal(BaseModel):
     streak: Optional[int] = 0
     subtasks: Optional[List[dict]] = []
     progress_logs: Optional[List[dict]] = []
+    category: Optional[str] = "academic"
+    milestones: Optional[List[dict]] = []
+    xp_reward: Optional[int] = 100
+    deadline: Optional[str] = None
+    xp_earned: Optional[int] = 0  # XP earned so far from milestones
 
 class GoalUpdate(BaseModel):
     title: Optional[str] = None
@@ -151,6 +160,11 @@ class GoalUpdate(BaseModel):
     streak: Optional[int] = None
     subtasks: Optional[List[dict]] = None
     progress_logs: Optional[List[dict]] = None
+    category: Optional[str] = None
+    milestones: Optional[List[dict]] = None
+    xp_reward: Optional[int] = None
+    deadline: Optional[str] = None
+    xp_earned: Optional[int] = None
 
 class AIRequest(BaseModel):
     prompt: Optional[str] = None
