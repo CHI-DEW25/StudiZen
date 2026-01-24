@@ -266,6 +266,15 @@ const Planner = () => {
     }
   };
 
+  const fetchGoals = async () => {
+    try {
+      const res = await goalsApi.getAll();
+      setGoals(res.data?.filter(g => !g.completed) || []);
+    } catch (error) {
+      console.error('Failed to fetch goals:', error);
+    }
+  };
+
   const checkCalendarStatus = async () => {
     try {
       const res = await calendarApi.getStatus();
