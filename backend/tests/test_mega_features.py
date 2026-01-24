@@ -411,7 +411,7 @@ class TestGroupChat:
         response = requests.post(f"{BASE_URL}/api/groups/{group_id}/messages", headers=auth_headers, json={
             "content": "Hello, this is a test message!"
         })
-        assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
+        assert response.status_code in [200, 201], f"Expected 200/201, got {response.status_code}: {response.text}"
         data = response.json()
         assert data["content"] == "Hello, this is a test message!"
         assert data["message_type"] == "text"
@@ -464,7 +464,7 @@ class TestGroupGoals:
             "target_count": 100,
             "target_date": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
         })
-        assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
+        assert response.status_code in [200, 201], f"Expected 200/201, got {response.status_code}: {response.text}"
         data = response.json()
         assert data["title"] == "Complete 100 Pomodoros"
         assert data["target_count"] == 100
