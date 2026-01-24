@@ -771,6 +771,61 @@ async def delete_goal(goal_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Goal not found")
     return {"message": "Goal deleted"}
 
+class GoalBreakdownRequest(BaseModel):
+    goal: str
+    description: Optional[str] = ""
+    completed: Optional[bool] = False
+    subtasks: Optional[List[dict]] = None
+    progress: Optional[float] = 0
+    progressLogs: Optional[List[dict]] = None
+    streak: Optional[int] = 0
+    lastProgressDate: Optional[str] = None
+
+@api_router.post("/goals/{goal_id}/breakdown")
+async def breakdown_goal(goal_id: str, request: GoalBreakdownRequest, current_user: dict = Depends(get_current_user)):
+    """Use AI to break down a goal into actionable subtasks"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    import json
+    
+    goal = await db.goals.find_one(
+        {"goal_id": goal_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    chat = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id=f"breakdown_{goal_id}_{uuid.uuid4().hex[:8]}",
+        system_message="""You are a goal breakdown assistant for students. Break down the given goal into 4-7 actionable, specific subtasks.
+Each subtask should:
+- Be achievable in 15-60 minutes
+- Be specific and measurable
+- Progress logically toward the goal
+
+Return ONLY a JSON array of objects with 'title' field. Example:
+[{"title": "Review chapter 1 key concepts"}, {"title": "Complete practice problems 1-10"}]"""
+    ).with_model("openai", "gpt-4o")
+    
+    context = f"Goal: {request.goal}"
+    if request.description:
+        context += f"\nDescription: {request.description}"
+    
+    message = UserMessage(text=f"Break down this goal into actionable steps:\n{context}")
+    response = await chat.send_message(message)
+    
+    try:
+        json_start = response.find('[')
+        json_end = response.rfind(']') + 1
+        if json_start != -1 and json_end > json_start:
+            subtasks = json.loads(response[json_start:json_end])
+        else:
+            subtasks = [{"title": "Work on: " + request.goal}]
+    except:
+        subtasks = [{"title": "Work on: " + request.goal}]
+    
+    return subtasks
+
 # ============ LEADERBOARD ROUTES ============
 
 @api_router.get("/leaderboard")
