@@ -81,14 +81,21 @@ Build a comprehensive productivity web app called "StudySmart" for students with
 - [x] Dashboard with analytics overview
 - [x] Tasks page - Full CRUD with priority scoring
 - [x] Focus Timer - Pomodoro with customizable duration
-- [x] **Goals page - FULLY IMPLEMENTED:**
+- [x] **Goals page - FULLY ENHANCED:**
   - Goal CRUD with title, description, linked tasks
+  - **Category system**: Academic, Personal, Health, Career, Other (with icons)
+  - **Milestone timeline**: 4 auto-generated milestones (25%, 50%, 75%, 100%)
+  - **XP Rewards**: Earn XP for milestones (25/50/75/100 XP) and goal completion
+  - **AI Weekly Review**: Get personalized coaching feedback
+  - **Linked Tasks**: Complete tasks directly from goal detail, auto-updates progress
   - AI-powered goal breakdown (generates 4-7 subtasks)
   - Subtasks with checkbox completion
-  - Progress tracking (auto-calculated from subtasks)
+  - Progress tracking (auto-calculated from subtasks OR linked tasks)
   - Progress logging (minutes + notes)
   - Streak tracking (consecutive days of progress)
   - Quick progress checkboxes on goal cards (+25% progress per click)
+  - **Celebration confetti** when completing goals
+  - **Deadline tracking** with overdue warnings
 - [x] Analytics page with charts
 - [x] Settings page
 - [x] **Light/Dark mode - FIXED**
