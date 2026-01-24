@@ -379,9 +379,14 @@
 .stagger-5 { animation-delay: 0.5s; opacity: 0; }
 
 /* Selection */
-::selection {
+.dark ::selection {
     background: rgba(34, 197, 94, 0.3);
     color: white;
+}
+
+.light ::selection {
+    background: rgba(34, 197, 94, 0.3);
+    color: black;
 }
 
 /* Focus styles */
