@@ -104,11 +104,18 @@ Build a comprehensive productivity web app called "StudySmart" for students with
   - Prioritizes urgent + high-priority tasks
   - Breaks long tasks into multiple sessions
   - Includes lunch break
-- [x] **Timeline UI:**
-  - Visual daily schedule with time blocks
-  - Color-coded by type (green=task, amber=break, purple=event)
-  - Delete blocks functionality
-  - "Explain" button for AI explanation of schedule
+- [x] **Multiple View Modes:**
+  - **Daily**: Timeline with schedule blocks, Today's Focus, Pending Tasks
+  - **Weekly**: 7-day grid with hours/tasks per day, overload detection
+  - **Monthly**: Calendar grid showing tasks due per day
+  - **Yearly**: 12-month overview with completion rates
+- [x] **Date Navigation:**
+  - Calendar popover for date selection
+  - View-specific navigation (day/week/month/year arrows)
+  - Click-to-drill-down between views
+- [x] **Overload Detection:**
+  - Warns when days exceed 8 hours of work
+  - Suggests redistributing tasks to lighter days
 - [x] **Energy-aware Scheduling:**
   - Low energy: schedules easier tasks, more breaks
   - High energy: tackles harder tasks in morning
