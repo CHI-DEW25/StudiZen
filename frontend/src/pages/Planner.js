@@ -623,6 +623,7 @@ const Planner = () => {
           schedule={schedule}
           blocks={blocks}
           tasks={tasks}
+          goals={goals}
           isLoading={isLoading}
           totalWorkMinutes={totalWorkMinutes}
           calendarStatus={calendarStatus}
