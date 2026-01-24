@@ -207,14 +207,24 @@
         transform: translateY(-2px);
     }
     
-    .btn-secondary {
+    .dark .btn-secondary {
         @apply bg-white/5 border border-white/10 text-white font-semibold;
         backdrop-filter: blur(10px);
         transition: all 0.3s ease;
     }
     
-    .btn-secondary:hover {
+    .dark .btn-secondary:hover {
         @apply bg-white/10 border-white/20;
+        transform: translateY(-2px);
+    }
+    
+    .light .btn-secondary {
+        @apply bg-gray-100 border border-gray-200 text-gray-800 font-semibold;
+        transition: all 0.3s ease;
+    }
+    
+    .light .btn-secondary:hover {
+        @apply bg-gray-200 border-gray-300;
         transform: translateY(-2px);
     }
     
