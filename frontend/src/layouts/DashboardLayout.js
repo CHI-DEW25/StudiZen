@@ -285,7 +285,7 @@ const DashboardLayout = () => {
           </Link>
           
           <button 
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-secondary-foreground/5 relative"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 relative"
             data-testid="notifications-btn"
           >
             <Bell className="w-5 h-5" />
