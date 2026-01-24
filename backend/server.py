@@ -1844,7 +1844,7 @@ async def get_group_messages(
     
     return list(reversed(messages))
 
-@api_router.post("/groups/{group_id}/messages")
+@api_router.post("/groups/{group_id}/messages", status_code=201)
 async def send_group_message(
     group_id: str,
     message_data: GroupMessageCreate,
