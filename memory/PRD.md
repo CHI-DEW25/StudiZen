@@ -249,4 +249,4 @@ Build a comprehensive productivity web app called "StudySmart" for students with
 - Password: test123
 
 ## Preview URL
-https://studysmart-113.preview.emergentagent.com
+https://study-wizard-14.preview.emergentagent.com
