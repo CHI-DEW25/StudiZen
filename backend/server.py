@@ -682,23 +682,54 @@ async def update_task(task_id: str, task_data: TaskUpdate, current_user: dict = 
         raise HTTPException(status_code=404, detail="Task not found")
     
     update_dict = {k: v for k, v in task_data.model_dump().items() if v is not None}
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Track status history if status is changing
+    if task_data.status and task_data.status != current_task.get("status"):
+        status_history = current_task.get("status_history", [])
+        status_history.append({
+            "status": task_data.status,
+            "timestamp": now,
+            "note": f"Changed from {current_task.get('status', 'unknown')} to {task_data.status}"
+        })
+        update_dict["status_history"] = status_history
     
     # Check if task is being completed
     if task_data.status == "completed" and current_task["status"] != "completed":
-        update_dict["completed_at"] = datetime.now(timezone.utc).isoformat()
+        update_dict["completed_at"] = now
         
         # Award XP for completing task
         xp_amount = XP_CONFIG["task_completed"].get(current_task["priority"], 30)
         user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+        
+        # Get user's groups for XP bonus
+        user_groups = await db.group_memberships.find({"user_id": current_user["user_id"]}, {"_id": 0}).to_list(10)
+        primary_group_id = user_groups[0]["group_id"] if user_groups else user.get("study_group_id")
+        
         await award_xp(
             current_user["user_id"], 
             xp_amount, 
             f"Completed task: {current_task['title']}",
-            user.get("study_group_id")
+            primary_group_id
         )
         
         # Update streak
         await calculate_streak(current_user["user_id"])
+        
+        # Update linked goal progress if applicable
+        if current_task.get("linked_goal_id"):
+            goal = await db.goals.find_one({"goal_id": current_task["linked_goal_id"]}, {"_id": 0})
+            if goal:
+                linked_tasks = await db.tasks.find(
+                    {"task_id": {"$in": goal.get("target_tasks", [])}},
+                    {"_id": 0}
+                ).to_list(100)
+                completed = len([t for t in linked_tasks if t.get("status") == "completed"]) + 1
+                new_progress = (completed / len(goal.get("target_tasks", [1]))) * 100 if goal.get("target_tasks") else 0
+                await db.goals.update_one(
+                    {"goal_id": current_task["linked_goal_id"]},
+                    {"$set": {"progress": new_progress}}
+                )
     
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
