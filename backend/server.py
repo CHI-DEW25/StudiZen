@@ -576,6 +576,7 @@ async def logout(request: Request, response: Response):
 @api_router.post("/tasks", response_model=Task, status_code=201)
 async def create_task(task_data: TaskCreate, current_user: dict = Depends(get_current_user)):
     task_id = f"task_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
     task_doc = {
         "task_id": task_id,
         "user_id": current_user["user_id"],
@@ -589,7 +590,12 @@ async def create_task(task_data: TaskCreate, current_user: dict = Depends(get_cu
         "depends_on": task_data.depends_on or [],
         "scheduled_time": task_data.scheduled_time,
         "completed_at": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now,
+        "linked_goal_id": task_data.linked_goal_id,
+        "tags": task_data.tags or [],
+        "status_history": [{"status": "pending", "timestamp": now, "note": "Task created"}],
+        "actual_time": None,
+        "is_overdue": False
     }
     await db.tasks.insert_one(task_doc)
     return Task(**{k: v for k, v in task_doc.items() if k != "_id"})
