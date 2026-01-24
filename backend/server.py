@@ -1498,12 +1498,557 @@ async def leave_study_group(group_id: str, current_user: dict = Depends(get_curr
 
 @api_router.get("/groups/my/current")
 async def get_my_study_group(current_user: dict = Depends(get_current_user)):
-    """Get the current user's study group"""
+    """Get the current user's primary study group (legacy)"""
     group_id = current_user.get("study_group_id")
     if not group_id:
         return None
     
     return await get_study_group(group_id, current_user)
+
+# ============ MULTI-GROUP SYSTEM ============
+
+@api_router.get("/groups/my/all")
+async def get_my_groups(current_user: dict = Depends(get_current_user)):
+    """Get all groups the user is a member of"""
+    memberships = await db.group_memberships.find(
+        {"user_id": current_user["user_id"], "is_active": True},
+        {"_id": 0}
+    ).to_list(50)
+    
+    groups = []
+    for membership in memberships:
+        group = await db.study_groups.find_one({"group_id": membership["group_id"]}, {"_id": 0})
+        if group:
+            member_count = await db.group_memberships.count_documents({
+                "group_id": group["group_id"],
+                "is_active": True
+            })
+            # Get unread message count
+            last_read = membership.get("last_read_at", "2000-01-01")
+            unread_count = await db.group_messages.count_documents({
+                "group_id": group["group_id"],
+                "created_at": {"$gt": last_read},
+                "user_id": {"$ne": current_user["user_id"]}
+            })
+            
+            groups.append({
+                "group_id": group["group_id"],
+                "name": group["name"],
+                "description": group.get("description", ""),
+                "role": membership["role"],
+                "joined_at": membership["joined_at"],
+                "total_xp": group.get("total_xp", 0),
+                "weekly_xp": group.get("weekly_xp", 0),
+                "member_count": member_count,
+                "unread_count": unread_count,
+                "is_owner": membership["role"] == "owner"
+            })
+    
+    return groups
+
+@api_router.post("/groups/v2", status_code=201)
+async def create_study_group_v2(group_data: StudyGroupCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new study group (multi-group version)"""
+    group_id = f"group_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    group_doc = {
+        "group_id": group_id,
+        "name": group_data.name,
+        "description": group_data.description or "",
+        "owner_id": current_user["user_id"],
+        "is_public": group_data.is_public,
+        "total_xp": 0,
+        "weekly_xp": 0,
+        "created_at": now
+    }
+    await db.study_groups.insert_one(group_doc)
+    
+    # Create membership record
+    membership_doc = {
+        "membership_id": f"mem_{uuid.uuid4().hex[:12]}",
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "role": "owner",
+        "joined_at": now,
+        "is_active": True,
+        "last_read_at": now
+    }
+    await db.group_memberships.insert_one(membership_doc)
+    
+    # Also update legacy field for backward compatibility
+    if not current_user.get("study_group_id"):
+        await db.users.update_one(
+            {"user_id": current_user["user_id"]},
+            {"$set": {"study_group_id": group_id}}
+        )
+    
+    # Send system message
+    await db.group_messages.insert_one({
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "user_id": "system",
+        "user_name": "System",
+        "content": f"{current_user['name']} created this group",
+        "message_type": "system",
+        "created_at": now
+    })
+    
+    return {
+        "group_id": group_id,
+        "name": group_data.name,
+        "description": group_data.description,
+        "owner_id": current_user["user_id"],
+        "member_count": 1
+    }
+
+@api_router.post("/groups/{group_id}/join/v2")
+async def join_study_group_v2(group_id: str, current_user: dict = Depends(get_current_user)):
+    """Join a study group (multi-group version)"""
+    group = await db.study_groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    if not group.get("is_public", True):
+        raise HTTPException(status_code=403, detail="This group is private")
+    
+    # Check if already a member
+    existing = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You are already a member of this group")
+    
+    # Check max groups limit (max 5 groups per user)
+    active_memberships = await db.group_memberships.count_documents({
+        "user_id": current_user["user_id"],
+        "is_active": True
+    })
+    if active_memberships >= 5:
+        raise HTTPException(status_code=400, detail="You can only be in up to 5 groups at a time")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Create membership
+    membership_doc = {
+        "membership_id": f"mem_{uuid.uuid4().hex[:12]}",
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "role": "member",
+        "joined_at": now,
+        "is_active": True,
+        "last_read_at": now
+    }
+    await db.group_memberships.insert_one(membership_doc)
+    
+    # Update legacy field if user has no primary group
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    if not user.get("study_group_id"):
+        await db.users.update_one(
+            {"user_id": current_user["user_id"]},
+            {"$set": {"study_group_id": group_id}}
+        )
+    
+    # Send system message
+    await db.group_messages.insert_one({
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "user_id": "system",
+        "user_name": "System",
+        "content": f"{current_user['name']} joined the group",
+        "message_type": "system",
+        "created_at": now
+    })
+    
+    return {"message": f"Successfully joined {group['name']}"}
+
+@api_router.post("/groups/{group_id}/leave/v2")
+async def leave_study_group_v2(group_id: str, current_user: dict = Depends(get_current_user)):
+    """Leave a study group (multi-group version)"""
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=400, detail="You are not in this group")
+    
+    group = await db.study_groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Check if user is owner
+    if membership["role"] == "owner":
+        # Find another member to transfer ownership
+        other_member = await db.group_memberships.find_one({
+            "group_id": group_id,
+            "user_id": {"$ne": current_user["user_id"]},
+            "is_active": True
+        })
+        
+        if other_member:
+            # Transfer ownership
+            await db.group_memberships.update_one(
+                {"membership_id": other_member["membership_id"]},
+                {"$set": {"role": "owner"}}
+            )
+            await db.study_groups.update_one(
+                {"group_id": group_id},
+                {"$set": {"owner_id": other_member["user_id"]}}
+            )
+            
+            # Send system message
+            new_owner = await db.users.find_one({"user_id": other_member["user_id"]}, {"_id": 0})
+            await db.group_messages.insert_one({
+                "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+                "group_id": group_id,
+                "user_id": "system",
+                "user_name": "System",
+                "content": f"{new_owner['name']} is now the group owner",
+                "message_type": "system",
+                "created_at": now
+            })
+        else:
+            # Delete the group if no other members
+            await db.study_groups.delete_one({"group_id": group_id})
+            await db.group_messages.delete_many({"group_id": group_id})
+            await db.group_goals.delete_many({"group_id": group_id})
+    
+    # Mark membership as inactive
+    await db.group_memberships.update_one(
+        {"membership_id": membership["membership_id"]},
+        {"$set": {"is_active": False}}
+    )
+    
+    # Update legacy field if this was the primary group
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    if user.get("study_group_id") == group_id:
+        # Find another active group
+        other_membership = await db.group_memberships.find_one({
+            "user_id": current_user["user_id"],
+            "group_id": {"$ne": group_id},
+            "is_active": True
+        })
+        new_primary = other_membership["group_id"] if other_membership else None
+        await db.users.update_one(
+            {"user_id": current_user["user_id"]},
+            {"$set": {"study_group_id": new_primary}}
+        )
+    
+    # Send system message
+    if group:
+        await db.group_messages.insert_one({
+            "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+            "group_id": group_id,
+            "user_id": "system",
+            "user_name": "System",
+            "content": f"{current_user['name']} left the group",
+            "message_type": "system",
+            "created_at": now
+        })
+    
+    return {"message": "Successfully left the group"}
+
+@api_router.get("/groups/{group_id}/details")
+async def get_group_details_v2(group_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed info about a group including members"""
+    group = await db.study_groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is a member
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    
+    # Get members
+    memberships = await db.group_memberships.find(
+        {"group_id": group_id, "is_active": True},
+        {"_id": 0}
+    ).to_list(100)
+    
+    members = []
+    for mem in memberships:
+        user = await db.users.find_one({"user_id": mem["user_id"]}, {"_id": 0, "password_hash": 0})
+        if user:
+            members.append({
+                "user_id": user["user_id"],
+                "name": user["name"],
+                "picture": user.get("picture"),
+                "weekly_xp": user.get("weekly_xp", 0),
+                "total_xp": user.get("total_xp", 0),
+                "streak": user.get("current_streak", 0),
+                "role": mem["role"],
+                "joined_at": mem["joined_at"],
+                "is_owner": mem["role"] == "owner"
+            })
+    
+    # Sort by XP
+    members.sort(key=lambda x: x["weekly_xp"], reverse=True)
+    
+    return {
+        "group_id": group["group_id"],
+        "name": group["name"],
+        "description": group.get("description", ""),
+        "owner_id": group["owner_id"],
+        "total_xp": group.get("total_xp", 0),
+        "weekly_xp": group.get("weekly_xp", 0),
+        "is_public": group.get("is_public", True),
+        "created_at": group["created_at"],
+        "members": members,
+        "member_count": len(members),
+        "is_member": membership is not None,
+        "is_owner": membership["role"] == "owner" if membership else False,
+        "user_role": membership["role"] if membership else None
+    }
+
+# ============ GROUP CHAT ============
+
+@api_router.get("/groups/{group_id}/messages")
+async def get_group_messages(
+    group_id: str,
+    limit: int = 50,
+    before: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get chat messages for a group"""
+    # Verify membership
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    query = {"group_id": group_id}
+    if before:
+        query["created_at"] = {"$lt": before}
+    
+    messages = await db.group_messages.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # Update last read timestamp
+    await db.group_memberships.update_one(
+        {"membership_id": membership["membership_id"]},
+        {"$set": {"last_read_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return list(reversed(messages))
+
+@api_router.post("/groups/{group_id}/messages")
+async def send_group_message(
+    group_id: str,
+    message_data: GroupMessageCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a message to a group chat"""
+    # Verify membership
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    if not message_data.content.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    message_doc = {
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "user_id": current_user["user_id"],
+        "user_name": current_user["name"],
+        "user_picture": current_user.get("picture"),
+        "content": message_data.content.strip(),
+        "message_type": "text",
+        "created_at": now
+    }
+    await db.group_messages.insert_one(message_doc)
+    
+    # Update membership last_read
+    await db.group_memberships.update_one(
+        {"membership_id": membership["membership_id"]},
+        {"$set": {"last_read_at": now}}
+    )
+    
+    return {k: v for k, v in message_doc.items() if k != "_id"}
+
+# ============ GROUP GOALS ============
+
+@api_router.get("/groups/{group_id}/goals")
+async def get_group_goals(group_id: str, current_user: dict = Depends(get_current_user)):
+    """Get shared goals for a group"""
+    # Verify membership
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    goals = await db.group_goals.find(
+        {"group_id": group_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    for goal in goals:
+        goal["progress"] = (goal.get("current_count", 0) / goal.get("target_count", 1)) * 100 if goal.get("target_count") else 0
+    
+    return goals
+
+@api_router.post("/groups/{group_id}/goals")
+async def create_group_goal(
+    group_id: str,
+    goal_data: GroupGoalCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a shared goal for the group"""
+    # Verify membership
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    goal_doc = {
+        "goal_id": f"ggoal_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "title": goal_data.title,
+        "description": goal_data.description or "",
+        "target_count": goal_data.target_count,
+        "current_count": 0,
+        "target_date": goal_data.target_date,
+        "completed": False,
+        "contributors": [],
+        "created_by": current_user["user_id"],
+        "created_at": now
+    }
+    await db.group_goals.insert_one(goal_doc)
+    
+    # Send system message
+    await db.group_messages.insert_one({
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "user_id": "system",
+        "user_name": "System",
+        "content": f"{current_user['name']} created a new goal: {goal_data.title}",
+        "message_type": "system",
+        "created_at": now
+    })
+    
+    return {k: v for k, v in goal_doc.items() if k != "_id"}
+
+@api_router.post("/groups/{group_id}/goals/{goal_id}/contribute")
+async def contribute_to_group_goal(
+    group_id: str,
+    goal_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Contribute to a group goal"""
+    # Verify membership
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    goal = await db.group_goals.find_one({"goal_id": goal_id, "group_id": group_id}, {"_id": 0})
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    if goal.get("completed"):
+        raise HTTPException(status_code=400, detail="This goal is already completed")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Add contribution
+    new_count = goal.get("current_count", 0) + 1
+    is_completed = new_count >= goal.get("target_count", 10)
+    
+    contribution = {
+        "user_id": current_user["user_id"],
+        "user_name": current_user["name"],
+        "contributed_at": now
+    }
+    
+    await db.group_goals.update_one(
+        {"goal_id": goal_id},
+        {
+            "$inc": {"current_count": 1},
+            "$push": {"contributors": contribution},
+            "$set": {"completed": is_completed}
+        }
+    )
+    
+    # Award XP for contribution
+    await award_xp(
+        current_user["user_id"],
+        15,  # XP for contribution
+        f"Contributed to group goal: {goal['title']}",
+        group_id
+    )
+    
+    # Send achievement message if goal completed
+    if is_completed:
+        await db.group_messages.insert_one({
+            "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+            "group_id": group_id,
+            "user_id": "system",
+            "user_name": "System",
+            "content": f"🎉 Goal completed: {goal['title']}! Great teamwork everyone!",
+            "message_type": "achievement",
+            "created_at": now
+        })
+        
+        # Award bonus XP to all contributors
+        unique_contributors = set(c["user_id"] for c in goal.get("contributors", []))
+        unique_contributors.add(current_user["user_id"])
+        for user_id in unique_contributors:
+            await award_xp(user_id, 50, f"Group goal completed: {goal['title']}", group_id)
+    
+    return {
+        "message": "Contribution recorded",
+        "new_count": new_count,
+        "is_completed": is_completed,
+        "xp_earned": 15 + (50 if is_completed else 0)
+    }
+
+@api_router.post("/groups/{group_id}/set-primary")
+async def set_primary_group(group_id: str, current_user: dict = Depends(get_current_user)):
+    """Set a group as the user's primary group for XP bonuses"""
+    membership = await db.group_memberships.find_one({
+        "user_id": current_user["user_id"],
+        "group_id": group_id,
+        "is_active": True
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    await db.users.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$set": {"study_group_id": group_id}}
+    )
+    
+    return {"message": "Primary group updated"}
 
 # ============ ANALYTICS ROUTES ============
 
