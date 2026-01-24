@@ -124,6 +124,8 @@ class GoalCreate(BaseModel):
     description: Optional[str] = ""
     target_tasks: Optional[List[str]] = []
     week_start: str
+    streak: Optional[int] = 0
+    progress_logs: Optional[List[dict]] = []
 
 class Goal(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -136,12 +138,19 @@ class Goal(BaseModel):
     progress: float
     completed: bool
     created_at: str
+    streak: Optional[int] = 0
+    subtasks: Optional[List[dict]] = []
+    progress_logs: Optional[List[dict]] = []
 
 class GoalUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     target_tasks: Optional[List[str]] = None
     completed: Optional[bool] = None
+    progress: Optional[float] = None
+    streak: Optional[int] = None
+    subtasks: Optional[List[dict]] = None
+    progress_logs: Optional[List[dict]] = None
 
 class AIRequest(BaseModel):
     prompt: Optional[str] = None
