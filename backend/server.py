@@ -911,6 +911,133 @@ async def delete_goal(goal_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Goal not found")
     return {"message": "Goal deleted"}
 
+@api_router.get("/goals/{goal_id}/review")
+async def get_goal_weekly_review(goal_id: str, current_user: dict = Depends(get_current_user)):
+    """AI-powered weekly review for a specific goal"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    goal = await db.goals.find_one(
+        {"goal_id": goal_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    # Get linked tasks
+    linked_tasks = []
+    if goal.get("target_tasks"):
+        linked_tasks = await db.tasks.find(
+            {"task_id": {"$in": goal["target_tasks"]}},
+            {"_id": 0}
+        ).to_list(100)
+    
+    completed_tasks = len([t for t in linked_tasks if t.get("status") == "completed"])
+    total_tasks = len(linked_tasks)
+    
+    # Build context
+    context = f"""Goal: {goal['title']}
+Description: {goal.get('description', 'No description')}
+Category: {goal.get('category', 'academic')}
+Progress: {goal.get('progress', 0):.0f}%
+Streak: {goal.get('streak', 0)} days
+Linked Tasks: {completed_tasks}/{total_tasks} completed
+Milestones Completed: {len([m for m in goal.get('milestones', []) if m.get('completed')])}/{len(goal.get('milestones', []))}
+XP Earned: {goal.get('xp_earned', 0)}
+Recent Progress Logs: {goal.get('progress_logs', [])[-5:]}"""
+    
+    chat = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id=f"review_{goal_id}_{uuid.uuid4().hex[:8]}",
+        system_message="""You are a supportive study coach doing a weekly review with a student. 
+Be encouraging but honest. Ask 2-3 reflective questions. Keep it conversational and under 150 words.
+Structure: 1) Acknowledge progress 2) Note any concerns 3) Ask reflective questions 4) Motivational closing"""
+    ).with_model("openai", "gpt-4o")
+    
+    message = UserMessage(text=f"Give me a weekly review for this goal:\n{context}")
+    review = await chat.send_message(message)
+    
+    return {
+        "goal_id": goal_id,
+        "review": review,
+        "stats": {
+            "progress": goal.get("progress", 0),
+            "streak": goal.get("streak", 0),
+            "tasks_completed": completed_tasks,
+            "tasks_total": total_tasks,
+            "milestones_completed": len([m for m in goal.get("milestones", []) if m.get("completed")]),
+            "xp_earned": goal.get("xp_earned", 0)
+        }
+    }
+
+@api_router.post("/goals/{goal_id}/complete-task/{task_id}")
+async def complete_linked_task(goal_id: str, task_id: str, current_user: dict = Depends(get_current_user)):
+    """Complete a task that's linked to a goal and update goal progress"""
+    # Verify the goal exists and task is linked
+    goal = await db.goals.find_one(
+        {"goal_id": goal_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    if task_id not in goal.get("target_tasks", []):
+        raise HTTPException(status_code=400, detail="Task not linked to this goal")
+    
+    # Complete the task
+    result = await db.tasks.update_one(
+        {"task_id": task_id, "user_id": current_user["user_id"]},
+        {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Award XP for completing task
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    await award_xp(
+        current_user["user_id"],
+        XP_CONFIG["task_completed"],
+        f"Completed task: {task_id}",
+        user.get("study_group_id")
+    )
+    
+    # Recalculate goal progress
+    linked_tasks = await db.tasks.find(
+        {"task_id": {"$in": goal["target_tasks"]}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    completed = len([t for t in linked_tasks if t.get("status") == "completed"])
+    new_progress = (completed / len(linked_tasks)) * 100 if linked_tasks else 0
+    
+    # Update goal progress and check milestones
+    milestones = goal.get("milestones", [])
+    xp_earned = goal.get("xp_earned", 0)
+    
+    for milestone in milestones:
+        if new_progress >= milestone.get("percentage", 0) and not milestone.get("completed"):
+            milestone["completed"] = True
+            milestone_xp = milestone.get("xp_reward", 25)
+            xp_earned += milestone_xp
+            await award_xp(
+                current_user["user_id"],
+                milestone_xp,
+                f"Milestone: {milestone.get('title')} for '{goal['title']}'",
+                user.get("study_group_id")
+            )
+    
+    await db.goals.update_one(
+        {"goal_id": goal_id},
+        {"$set": {"progress": new_progress, "milestones": milestones, "xp_earned": xp_earned}}
+    )
+    
+    return {
+        "message": "Task completed",
+        "new_progress": new_progress,
+        "xp_earned": xp_earned,
+        "milestones": milestones
+    }
+
 class GoalBreakdownRequest(BaseModel):
     goal: str
     description: Optional[str] = ""
