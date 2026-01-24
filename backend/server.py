@@ -167,6 +167,51 @@ class StudyGroupUpdate(BaseModel):
     description: Optional[str] = None
     is_public: Optional[bool] = None
 
+# ============ PLANNER MODELS ============
+
+class ScheduleBlock(BaseModel):
+    id: str
+    start: str  # HH:MM format
+    end: str    # HH:MM format
+    type: str   # "task" | "break" | "event" | "focus"
+    task_id: Optional[str] = None
+    title: str
+    priority_score: Optional[float] = None
+    is_locked: bool = False  # Google Calendar events are locked
+    color: Optional[str] = None
+
+class DaySchedule(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    schedule_id: str
+    user_id: str
+    date: str  # YYYY-MM-DD
+    blocks: List[dict]
+    energy_level: str = "medium"  # "low" | "medium" | "high"
+    available_hours: float = 8.0
+    created_at: str
+    updated_at: str
+
+class ScheduleGenerateRequest(BaseModel):
+    date: str  # YYYY-MM-DD
+    energy_level: str = "medium"
+    available_start: str = "09:00"
+    available_end: str = "21:00"
+    include_breaks: bool = True
+    pomodoro_style: bool = True  # 50 min work, 10 min break
+
+class ScheduleBlockUpdate(BaseModel):
+    start: Optional[str] = None
+    end: Optional[str] = None
+    task_id: Optional[str] = None
+
+class UserPreferences(BaseModel):
+    default_energy: str = "medium"
+    work_start: str = "09:00"
+    work_end: str = "21:00"
+    pomodoro_work: int = 50
+    pomodoro_break: int = 10
+    google_calendar_connected: bool = False
+
 # ============ AUTH HELPERS ============
 
 def hash_password(password: str) -> str:
