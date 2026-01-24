@@ -403,14 +403,14 @@ const Tasks = () => {
                   Link to Goal (optional)
                 </Label>
                 <Select
-                  value={formData.linked_goal_id}
-                  onValueChange={(value) => setFormData({ ...formData, linked_goal_id: value })}
+                  value={formData.linked_goal_id || "none"}
+                  onValueChange={(value) => setFormData({ ...formData, linked_goal_id: value === "none" ? "" : value })}
                 >
                   <SelectTrigger className="rounded-xl" data-testid="task-goal-select">
                     <SelectValue placeholder="Select a goal..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No goal</SelectItem>
+                    <SelectItem value="none">No goal</SelectItem>
                     {goals.map((goal) => (
                       <SelectItem key={goal.goal_id} value={goal.goal_id}>
                         {goal.title}
