@@ -267,13 +267,25 @@ const Goals = () => {
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
-                      {goal.streak > 0 && (
-                        <span className="text-sm text-orange-500 flex items-center gap-1">
-                          🔥 {goal.streak}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={goal.progress >= 100}
+                        onCheckedChange={(checked) => {
+                          // Stop propagation to prevent opening modal
+                          handleQuickProgress(goal, checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-5 w-5 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        data-testid={`goal-checkbox-${goal.goal_id}`}
+                      />
+                      <div>
+                        <CardTitle className="font-heading text-lg">{goal.title}</CardTitle>
+                        {goal.streak > 0 && (
+                          <span className="text-sm text-orange-500 flex items-center gap-1">
+                            🔥 {goal.streak} day streak
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
