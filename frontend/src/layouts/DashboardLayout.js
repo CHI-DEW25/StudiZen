@@ -227,7 +227,7 @@ const DashboardLayout = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end" 
-              className="w-56 rounded-xl bg-[hsl(260,35%,8%)] border border-border/10 shadow-xl"
+              className="w-56 rounded-xl bg-popover border border-border shadow-xl"
             >
               <DropdownMenuItem 
                 onClick={toggleTheme} 
