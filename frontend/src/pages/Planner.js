@@ -90,6 +90,7 @@ const Planner = () => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [tasks, setTasks] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [showOverloadWarning, setShowOverloadWarning] = useState(false);
   const [overloadSuggestion, setOverloadSuggestion] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -107,6 +108,7 @@ const Planner = () => {
       fetchYearlyData();
     }
     fetchTasks();
+    fetchGoals();
     checkCalendarStatus();
   }, [dateString, viewMode]);
 
