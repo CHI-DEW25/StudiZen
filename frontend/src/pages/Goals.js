@@ -145,6 +145,46 @@ const Goals = () => {
     );
   };
 
+  const handleQuickProgress = async (goal, checked) => {
+    try {
+      if (checked) {
+        // Add 25% progress when checkbox is clicked
+        const newProgress = Math.min((goal.progress || 0) + 25, 100);
+        const today = new Date().toISOString().split("T")[0];
+        const logs = goal.progress_logs || [];
+        const hasLoggedToday = logs.some((l) => l.date === today);
+        
+        const newLog = {
+          date: today,
+          minutes: 15,
+          note: "Quick progress check-in",
+        };
+        
+        const newStreak = hasLoggedToday ? (goal.streak || 0) : (goal.streak || 0) + 1;
+        
+        await goalsApi.update(goal.goal_id, {
+          progress: newProgress,
+          progress_logs: [...logs, newLog],
+          streak: newStreak,
+          completed: newProgress >= 100,
+        });
+        
+        toast.success(`+25% progress! ${newProgress >= 100 ? 'Goal completed! 🎉' : ''}`);
+      } else {
+        // Uncheck - reduce progress
+        const newProgress = Math.max((goal.progress || 0) - 25, 0);
+        await goalsApi.update(goal.goal_id, {
+          progress: newProgress,
+          completed: false,
+        });
+        toast.success('Progress adjusted');
+      }
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update progress');
+    }
+  };
+
   const activeGoals = goals.filter(g => !g.completed);
   const completedGoals = goals.filter(g => g.completed);
 
