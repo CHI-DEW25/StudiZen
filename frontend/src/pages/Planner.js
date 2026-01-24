@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { plannerApi, calendarApi, tasksApi } from '../lib/api';
+import { plannerApi, calendarApi, tasksApi, goalsApi } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Progress } from '../components/ui/progress';
+import { Badge } from '../components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -44,6 +45,8 @@ import {
   TrendingUp,
   LayoutGrid,
   List,
+  Target,
+  BookOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
