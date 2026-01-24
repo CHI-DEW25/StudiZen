@@ -85,6 +85,7 @@ Build a comprehensive productivity web app called "StudySmart" for students with
   - Progress logging (minutes + notes)
   - Streak tracking (consecutive days of progress)
   - Mark complete/reopen functionality
+  - **Quick progress checkboxes on goal cards** - click to add +25% progress & increment streak
 - [x] Analytics page with charts
 - [x] Settings page
 
