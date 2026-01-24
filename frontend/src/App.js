@@ -108,7 +108,7 @@ const AppRouter = () => {
         <Route path="tasks" element={<Tasks />} />
         <Route path="focus" element={<FocusTimer />} />
         <Route path="goals" element={<Goals />} />
-        <Route path=""
+        <Route path="groups" el
         <Route path="planner" element={<Planner />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<Settings />} />
