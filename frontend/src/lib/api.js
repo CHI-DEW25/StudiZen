@@ -88,4 +88,22 @@ export const groupsApi = {
   leave: (id) => api.post(`/groups/${id}/leave`),
 };
 
+// Planner API
+export const plannerApi = {
+  getSchedule: (date) => api.get(`/planner/schedule/${date}`),
+  generateSchedule: (data) => api.post('/planner/generate', data),
+  updateBlock: (date, blockId, data) => api.put(`/planner/schedule/${date}/block/${blockId}`, data),
+  deleteBlock: (date, blockId) => api.delete(`/planner/schedule/${date}/block/${blockId}`),
+  rescheduleTask: (taskId) => api.post(`/planner/reschedule-task/${taskId}`),
+  explainSchedule: (date) => api.get(`/planner/explain/${date}`),
+};
+
+// Google Calendar API
+export const calendarApi = {
+  getAuthUrl: () => api.get('/calendar/auth-url'),
+  getEvents: (date) => api.get('/calendar/events', { params: { date } }),
+  getStatus: () => api.get('/calendar/status'),
+  disconnect: () => api.delete('/calendar/disconnect'),
+};
+
 export default api;
