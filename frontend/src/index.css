@@ -70,11 +70,23 @@
     
     body {
         @apply bg-background text-foreground font-body antialiased;
+        min-height: 100vh;
+    }
+    
+    .dark body,
+    .dark {
         background: linear-gradient(180deg, 
             hsl(260, 30%, 4%) 0%, 
             hsl(260, 35%, 6%) 50%, 
             hsl(270, 30%, 8%) 100%);
-        min-height: 100vh;
+    }
+    
+    .light body,
+    .light {
+        background: linear-gradient(180deg, 
+            hsl(0, 0%, 98%) 0%, 
+            hsl(220, 14%, 96%) 50%, 
+            hsl(0, 0%, 100%) 100%);
     }
 }
 
