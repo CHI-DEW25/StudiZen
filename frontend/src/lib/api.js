@@ -75,6 +75,7 @@ export const aiApi = {
   breakDownTask: (data) => api.post('/ai/break-down-task', data),
   getWeeklySummary: () => api.post('/ai/weekly-summary'),
   checkBurnout: () => api.post('/ai/burnout-check'),
+  getFocusPatterns: () => api.post('/ai/focus-patterns'),
 };
 
 // Leaderboard API
