@@ -698,6 +698,9 @@ async def create_goal(goal_data: GoalCreate, current_user: dict = Depends(get_cu
         "week_start": goal_data.week_start,
         "progress": 0.0,
         "completed": False,
+        "streak": goal_data.streak or 0,
+        "subtasks": [],
+        "progress_logs": goal_data.progress_logs or [],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.goals.insert_one(goal_doc)
@@ -711,12 +714,21 @@ async def get_goals(current_user: dict = Depends(get_current_user)):
     ).sort("created_at", -1).to_list(100)
     
     for goal in goals:
-        if goal["target_tasks"]:
+        # Calculate progress from subtasks if present
+        if goal.get("subtasks") and len(goal["subtasks"]) > 0:
+            completed_subtasks = len([s for s in goal["subtasks"] if s.get("completed")])
+            goal["progress"] = (completed_subtasks / len(goal["subtasks"])) * 100
+        elif goal["target_tasks"]:
             completed_tasks = await db.tasks.count_documents({
                 "task_id": {"$in": goal["target_tasks"]},
                 "status": "completed"
             })
             goal["progress"] = (completed_tasks / len(goal["target_tasks"])) * 100
+        
+        # Ensure default values for new fields
+        goal.setdefault("streak", 0)
+        goal.setdefault("subtasks", [])
+        goal.setdefault("progress_logs", [])
     
     return [Goal(**g) for g in goals]
 
