@@ -1,7 +1,7 @@
 # StudySmart - Product Requirements Document
 
 ## Overview
-StudySmart is a comprehensive productivity web app designed for students, featuring AI-powered study tools, task management, focus timers, goal tracking, and social study groups.
+StudySmart is a comprehensive productivity web app designed for students, featuring AI-powered study tools, task management, focus timers, goal tracking, and social study groups with full chat functionality.
 
 ## Tech Stack
 - **Frontend:** React 18, Tailwind CSS, Shadcn/UI, Recharts, Framer Motion
@@ -45,13 +45,18 @@ StudySmart is a comprehensive productivity web app designed for students, featur
 - XP/badges rewards
 - Streak tracking
 
-### 4. Study Groups ✅ (NEW)
+### 4. Study Groups ✅ (ENHANCED)
 **Multi-Group Support:**
 - Join up to 5 groups simultaneously
 - Create public/private groups
-- Switch between groups in sidebar
+- Switch between groups in card view
 - Set primary group for XP bonuses
 - Leave groups (ownership transfer)
+
+**Full-Screen Group View (NEW):**
+- Click on group to enter full-screen immersive mode
+- Back arrow (←) to exit and return to groups list
+- Header with group name, member count, XP
 
 **Group Chat:**
 - Real-time messaging with polling
@@ -66,44 +71,55 @@ StudySmart is a comprehensive productivity web app designed for students, featur
 - XP rewards for contributions
 - Completion celebration messages
 
-**Leaderboard:**
-- Group rankings by XP
-- Weekly XP tracking
-- Member stats (streak, XP)
+**Group Stats Sidebar:**
+- Total XP, Weekly XP
+- Member count
+- Active Goals count
+- Top Contributors list
 
-### 5. Smart Daily Planner ✅
+### 5. Smart Daily Planner ✅ (ENHANCED)
 - AI-powered schedule generation
 - Energy level inputs (morning, afternoon, evening)
 - Multiple calendar views (Daily, Weekly, Monthly, Yearly)
 - Time block management
 - Read-only Google Calendar integration
 - Overload detection
+- **NEW: Pending Tasks sidebar with overdue badges**
+- **NEW: Active Goals sidebar with progress bars**
 
-### 6. Dashboard ✅
-- Overview of tasks, goals, sessions
-- Progress charts (Recharts)
-- Weekly activity visualization
-- Quick stats display
+### 6. Analytics & AI Insights ✅ (MAJOR UPDATE)
 
-### 7. Analytics/Insights ✅
-- Task completion trends
-- Focus time analysis
-- Daily statistics
-- Productivity metrics
+**Overview Tab:**
+- Productivity Score
+- Task Completion Rate
+- Focus Time (hours)
+- Goals Progress
+- Daily Activity Chart (14 days)
+- Task Distribution Pie Chart
 
-## Authentication ✅
-- Email/password registration and login
-- Google OAuth2 social login
-- JWT token-based sessions
-- Protected routes
+**Tasks Tab:**
+- Tasks Completed vs Overdue chart
+- Priority Breakdown (Urgent, High, Medium, Low)
+- Goal Progress cards
+
+**Focus Tab:**
+- Focus Time Trend chart
+- Pomodoro Sessions chart
+- AI Focus Pattern Analysis
+  - Peak hours analysis
+  - Day of week breakdown
+  - Total sessions and focus time
+
+**AI Insights Tab:**
+- **AI Study Coach:** Personalized study tips based on user data
+- **Burnout Detection:** Risk level (low/medium/high) with warnings
+- **AI Weekly Summary:** End-of-week performance review
 
 ## API Endpoints
 
 ### Auth
-- POST `/api/auth/register`
-- POST `/api/auth/login`
-- GET `/api/auth/google/login`
-- GET `/api/auth/google/callback`
+- POST `/api/auth/register`, `/api/auth/login`
+- GET `/api/auth/google/login`, `/api/auth/google/callback`
 - GET `/api/auth/me`
 
 ### Tasks
@@ -148,126 +164,46 @@ StudySmart is a comprehensive productivity web app designed for students, featur
 - GET `/api/analytics/overview`
 - GET `/api/analytics/daily-stats`
 
-### Leaderboard
-- GET `/api/leaderboard` - Groups leaderboard
-
-## Database Schema
-
-### users
-```json
-{
-  "user_id": "string",
-  "email": "string",
-  "name": "string",
-  "password_hash": "string (optional)",
-  "google_id": "string (optional)",
-  "picture": "string (optional)",
-  "xp": "number",
-  "total_xp": "number",
-  "weekly_xp": "number",
-  "current_streak": "number",
-  "longest_streak": "number",
-  "study_group_id": "string (primary group)"
-}
-```
-
-### tasks
-```json
-{
-  "task_id": "string",
-  "user_id": "string",
-  "title": "string",
-  "description": "string",
-  "subject": "string",
-  "priority": "low|medium|high|urgent",
-  "status": "pending|in-progress|completed",
-  "due_date": "string (ISO)",
-  "estimated_time": "number (minutes)",
-  "linked_goal_id": "string (optional)",
-  "tags": ["string"],
-  "status_history": [{"status", "timestamp", "note"}],
-  "actual_time": "number (optional)",
-  "is_overdue": "boolean",
-  "completed_at": "string (ISO)",
-  "created_at": "string (ISO)"
-}
-```
-
-### group_memberships (NEW)
-```json
-{
-  "membership_id": "string",
-  "user_id": "string",
-  "group_id": "string",
-  "role": "owner|admin|member",
-  "joined_at": "string (ISO)",
-  "is_active": "boolean",
-  "last_read_at": "string (ISO)"
-}
-```
-
-### group_messages (NEW)
-```json
-{
-  "message_id": "string",
-  "group_id": "string",
-  "user_id": "string",
-  "user_name": "string",
-  "user_picture": "string (optional)",
-  "content": "string",
-  "message_type": "text|system|achievement",
-  "created_at": "string (ISO)"
-}
-```
-
-### group_goals (NEW)
-```json
-{
-  "goal_id": "string",
-  "group_id": "string",
-  "title": "string",
-  "description": "string",
-  "target_count": "number",
-  "current_count": "number",
-  "target_date": "string (optional)",
-  "completed": "boolean",
-  "contributors": [{"user_id", "user_name", "contributed_at"}],
-  "created_by": "string",
-  "created_at": "string (ISO)"
-}
-```
+### AI Features
+- POST `/api/ai/study-coach` - Personalized advice
+- POST `/api/ai/break-down-task` - Task breakdown
+- POST `/api/ai/weekly-summary` - Weekly summary
+- POST `/api/ai/burnout-check` - Burnout detection
+- POST `/api/ai/focus-patterns` - Focus pattern analysis
 
 ## Completed Work (January 2026)
 
-### Jan 24, 2026
+### Jan 24, 2026 - Session 2
+- ✅ **Study Groups Full-Screen Mode:** Click on group to enter immersive view with exit button
+- ✅ **Enhanced Analytics Dashboard:** 4 tabs (Overview, Tasks, Focus, AI Insights)
+- ✅ **AI Study Coach:** Personalized advice based on user data
+- ✅ **AI Burnout Detection:** Risk assessment with warnings
+- ✅ **AI Focus Pattern Analysis:** Peak hours and day breakdown
+- ✅ **AI Weekly Summary:** End-of-week performance review
+- ✅ **Planner Integration:** Shows tasks and goals in sidebar
+- ✅ All tests passing (100%)
+
+### Jan 24, 2026 - Session 1
 - ✅ Enhanced Tasks with linked goals, tags, status history, overdue detection
-- ✅ Enhanced Tasks API with today_only filter and linked_goal_id filter
 - ✅ Enhanced Focus Timer with presets, streak tracking, session history
 - ✅ Implemented multi-group Study Groups system
 - ✅ Added group chat with real-time messaging
 - ✅ Added shared group goals with contributions
-- ✅ Fixed CORS issue for localhost development
-- ✅ All tests passing (100%)
 
 ### Previous Sessions
 - ✅ Smart Daily Planner with AI scheduling
 - ✅ Goals page with categories, milestones, XP
 - ✅ Light/Dark mode theming fix
-- ✅ Goal checkbox progress feature
 - ✅ Google Calendar integration (read-only)
 
 ## Upcoming Tasks
 
 ### P1 - High Priority
-- [ ] AI Study Coach implementation
-- [ ] Burnout detection alerts
-- [ ] Weekly AI summaries
-- [ ] Analytics dashboard overhaul with new charts
-- [ ] Connect leaderboard to real API (currently showing group leaderboard)
+- [ ] Two-way Google Calendar sync
+- [ ] Connect leaderboard to real API
 
 ### P2 - Medium Priority
 - [ ] Collapsible sidebar in DashboardLayout
-- [ ] Two-way Google Calendar sync
 - [ ] Firebase migration for cloud storage
 
 ### P3 - Low Priority
@@ -296,6 +232,7 @@ StudySmart is a comprehensive productivity web app designed for students, featur
     └── PRD.md             # This file
 ```
 
-## Refactoring Needs
-- Backend `server.py` is monolithic (~3000 lines) - needs to be split into separate route files using FastAPI's APIRouter
-- Large frontend pages (Goals.js, Planner.js, StudyGroups.js) should be decomposed into smaller components
+## Known Issues (Minor)
+- React key warnings in Dashboard/Planner (duplicate keys)
+- Recharts container sizing warning on initial load
+- Both issues are non-critical and don't affect functionality
