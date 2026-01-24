@@ -131,8 +131,8 @@ const DashboardLayout = () => {
           {/* Collapse Toggle Button */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-secondary border border-border/10 flex items-center justify-center text-gray-400 hover:text-foreground hover:bg-white/10 transition-colors z-10\"
-          data-testid="collapse-sidebar-btn\"
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-secondary border border-border/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors z-10"
+          data-testid="collapse-sidebar-btn"
         >
           {sidebarCollapsed ? (
             <ChevronRight className="w-4 h-4\" />
