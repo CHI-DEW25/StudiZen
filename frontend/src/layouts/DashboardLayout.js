@@ -135,9 +135,9 @@ const DashboardLayout = () => {
           data-testid="collapse-sidebar-btn"
         >
           {sidebarCollapsed ? (
-            <ChevronRight className="w-4 h-4\" />
+            <ChevronRight className="w-4 h-4" />
           ) : (
-            <ChevronLeft className="w-4 h-4\" />
+            <ChevronLeft className="w-4 h-4" />
           )}
         </button>
 
