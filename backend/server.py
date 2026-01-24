@@ -194,6 +194,48 @@ class StudyGroupUpdate(BaseModel):
     description: Optional[str] = None
     is_public: Optional[bool] = None
 
+# ============ MULTI-GROUP MODELS ============
+
+class GroupMembership(BaseModel):
+    membership_id: str
+    user_id: str
+    group_id: str
+    role: str = "member"  # "owner", "admin", "member"
+    joined_at: str
+    is_active: bool = True
+
+class GroupMessage(BaseModel):
+    message_id: str
+    group_id: str
+    user_id: str
+    user_name: str
+    user_picture: Optional[str] = None
+    content: str
+    message_type: str = "text"  # "text", "system", "achievement"
+    created_at: str
+
+class GroupMessageCreate(BaseModel):
+    content: str
+
+class GroupGoal(BaseModel):
+    goal_id: str
+    group_id: str
+    title: str
+    description: Optional[str] = ""
+    target_count: int = 10
+    current_count: int = 0
+    target_date: Optional[str] = None
+    completed: bool = False
+    contributors: List[dict] = []
+    created_by: str
+    created_at: str
+
+class GroupGoalCreate(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    target_count: int = 10
+    target_date: Optional[str] = None
+
 # ============ PLANNER MODELS ============
 
 class ScheduleBlock(BaseModel):
