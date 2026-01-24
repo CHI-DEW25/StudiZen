@@ -15,6 +15,7 @@ import FocusTimer from './pages/FocusTimer';
 import Goals from './pages/Goals';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
+import Planner from './pages/Planner';
 
 import './App.css';
 
