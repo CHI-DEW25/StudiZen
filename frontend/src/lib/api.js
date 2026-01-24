@@ -39,6 +39,8 @@ export const tasksApi = {
   create: (data) => api.post('/tasks', data),
   update: (id, data) => api.put(`/tasks/${id}`, data),
   delete: (id) => api.delete(`/tasks/${id}`),
+  getToday: () => api.get('/tasks', { params: { today_only: true } }),
+  getByGoal: (goalId) => api.get('/tasks', { params: { linked_goal_id: goalId } }),
 };
 
 // Pomodoro API
