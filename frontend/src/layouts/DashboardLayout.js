@@ -246,7 +246,7 @@ const DashboardLayout = () => {
                   </>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="text-gray-400 hover:text-foreground hover:bg-secondary-foreground/5 rounded-lg">
+              <DropdownMenuItem asChild className="text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg">
                 <Link to="/dashboard/settings" data-testid="settings-link">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
