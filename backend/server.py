@@ -605,6 +605,8 @@ async def get_tasks(
     status: Optional[str] = None,
     priority: Optional[str] = None,
     subject: Optional[str] = None,
+    linked_goal_id: Optional[str] = None,
+    today_only: Optional[bool] = False,
     current_user: dict = Depends(get_current_user)
 ):
     query = {"user_id": current_user["user_id"]}
@@ -614,8 +616,49 @@ async def get_tasks(
         query["priority"] = priority
     if subject:
         query["subject"] = subject
+    if linked_goal_id:
+        query["linked_goal_id"] = linked_goal_id
+    
+    # "Today's tasks" filter: due today or scheduled today
+    if today_only:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        query["$or"] = [
+            {"due_date": {"$regex": f"^{today}"}},
+            {"scheduled_time": {"$regex": f"^{today}"}}
+        ]
     
     tasks = await db.tasks.find(query, {"_id": 0}).to_list(1000)
+    
+    # Calculate is_overdue for each task
+    now = datetime.now(timezone.utc)
+    for task in tasks:
+        if task.get("due_date") and task.get("status") != "completed":
+            try:
+                # Parse different date formats
+                due_str = task["due_date"]
+                if "T" in due_str:
+                    due = datetime.fromisoformat(due_str.replace('Z', '+00:00'))
+                else:
+                    # Handle dd-MM-yyyy format
+                    parts = due_str.split('-')
+                    if len(parts) == 3 and len(parts[0]) == 2:
+                        due = datetime(int(parts[2]), int(parts[1]), int(parts[0]), tzinfo=timezone.utc)
+                    else:
+                        due = datetime.fromisoformat(due_str)
+                if due.tzinfo is None:
+                    due = due.replace(tzinfo=timezone.utc)
+                task["is_overdue"] = now > due
+            except:
+                task["is_overdue"] = False
+        else:
+            task["is_overdue"] = False
+        
+        # Ensure default values for new fields
+        task.setdefault("linked_goal_id", None)
+        task.setdefault("tags", [])
+        task.setdefault("status_history", [])
+        task.setdefault("actual_time", None)
+    
     return [Task(**t) for t in tasks]
 
 @api_router.get("/tasks/{task_id}", response_model=Task)
