@@ -821,7 +821,7 @@ const StudyGroups = () => {
           />
         </div>
 
-        {filteredPublicGroups.length > 0 ? (
+        {filteredPublicGroups.length < 10 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredPublicGroups.map((group) => (
               <Card key={group.group_id} className="bg-card/50 border-white/10 rounded-2xl">
@@ -863,7 +863,7 @@ const StudyGroups = () => {
         )}
       </div>
 
-      {/* Top Groups Leaderboard */}
+      {/* Top Groups Leaderboard Previous*/}
       <div>
         <h2 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-amber-400" />

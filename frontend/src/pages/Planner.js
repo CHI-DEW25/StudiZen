@@ -35,6 +35,7 @@ import {
   Battery,
   BatteryLow,
   BatteryFull,
+  BatteryMedium,
   Coffee,
   CheckCircle,
   Info,
@@ -95,7 +96,8 @@ const Planner = () => {
   const [overloadSuggestion, setOverloadSuggestion] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  const dateString = format(selectedDate, 'yyyy-MM-dd');
+  const dateString = format(selectedDate, 'dd-MM-yyyy');
+  let date = new Date()
 
   useEffect(() => {
     if (viewMode === 'daily') {
@@ -301,8 +303,8 @@ const Planner = () => {
       const res = await plannerApi.generateSchedule({
         date: dateString,
         energy_level: energyLevel,
-        available_start: '09:00',
-        available_end: '21:00',
+        available_start: date.getHours + ':' + date.getMinutes,
+        available_end: '22:00',
         include_breaks: true,
         pomodoro_style: true,
       });
