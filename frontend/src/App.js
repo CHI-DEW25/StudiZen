@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { Toaster } from './components/ui/sonner';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LayoutProvider } from './context/LayoutContext';
 
 // Pages
 import Landing from './pages/Landing';
@@ -124,10 +125,12 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRouter />
-          <Toaster position="top-right" richColors closeButton />
-        </BrowserRouter>
+        <LayoutProvider>
+          <BrowserRouter>
+            <AppRouter />
+            <Toaster position="top-right" richColors closeButton />
+          </BrowserRouter>
+        </LayoutProvider>
       </AuthProvider>
     </ThemeProvider>
   );

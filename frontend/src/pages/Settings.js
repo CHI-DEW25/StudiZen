@@ -1,18 +1,36 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLayout } from '../context/LayoutContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
-import { Moon, Sun, User, Mail, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import { Moon, Sun, User, Mail, LogOut, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const NAV_POSITION_OPTIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'right', label: 'Right' },
+  { value: 'top', label: 'Top (Dock)' },
+  { value: 'bottom', label: 'Bottom (Dock)' },
+];
 
 const Settings = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { navPosition, setNavPosition } = useLayout();
   const navigate = useNavigate();
+
+  const navLabel =
+    NAV_POSITION_OPTIONS.find((o) => o.value === navPosition)?.label || 'Left';
 
   const handleLogout = async () => {
     await logout();
@@ -78,7 +96,9 @@ const Settings = () => {
                 <Sun className="w-5 h-5 text-amber" />
               )}
               <div>
-                <Label htmlFor="theme-toggle" className="font-medium">Dark Mode</Label>
+                <Label htmlFor="theme-toggle" className="font-medium">
+                  Dark Mode
+                </Label>
                 <p className="text-sm text-muted-foreground">
                   Toggle between light and dark themes
                 </p>
@@ -91,6 +111,55 @@ const Settings = () => {
               data-testid="theme-switch"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Layout Card (Dropdown) */}
+      <Card className="bg-card/50 border-border/10 rounded-2xl">
+        <CardHeader>
+          <CardTitle className="font-heading text-lg">Layout</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label className="font-medium">Navigation Position</Label>
+            <p className="text-sm text-muted-foreground">
+              Choose where the liquid-glass navigation appears.
+            </p>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 border border-border/10 bg-secondary/20 hover:bg-secondary/30 transition text-left"
+                data-testid="navpos-dropdown-trigger"
+                aria-label="Navigation position"
+              >
+                <span className="text-sm font-medium text-foreground">{navLabel}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              align="start"
+              className="w-64 rounded-xl bg-popover border border-border shadow-xl"
+            >
+              {NAV_POSITION_OPTIONS.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() => setNavPosition(opt.value)}
+                  className={`rounded-lg cursor-pointer ${
+                    navPosition === opt.value
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                  }`}
+                  data-testid={`navpos-${opt.value}`}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardContent>
       </Card>
 
