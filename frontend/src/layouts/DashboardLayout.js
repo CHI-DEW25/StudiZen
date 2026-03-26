@@ -454,7 +454,9 @@ const DashboardLayout = () => {
         </filter>
       </svg>
 
-      <div className="min-h-screen gradient-bg">
+      <div className="min-h-screen gradient-bg relative overflow-hidden">
+        <div className="fixed inset-0 noise pointer-events-none opacity-[0.10]" />
+        {/*<div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none -z-10" />*/}
         {/* Desktop Nav: Vertical OR Center Dock */}
         {isVertical && (
           <aside

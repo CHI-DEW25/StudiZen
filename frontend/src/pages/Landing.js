@@ -151,10 +151,10 @@ const Landing = () => {
           <span className="text-gradient-green glow-text">Achieve More.</span>
         </h1>
         
-        <p className="text-lg md:text-xl text-muted-foreground-400 max-w-2xl mb-10 animate-fade-up stagger-2">
+         <p className="text-lg md:text-xl text-muted-foreground-400 max-w-2xl mb-10 animate-fade-up stagger-2">
           The all-in-one productivity dashboard that transforms how students plan, 
-          focus, and succeed. Powered by AI, designed for excellence.
-        </p>
+          focus, and succeed. <a href='https://m365.cloud.microsoft/search/?auth=2&origindomain=Office&client-request-id=ce5f7578-979c-4117-a49f-e3be229b9647'>Powered by AI, designed for excellence. </a>
+        </p> 
         
         {/* CTA Buttons */}
         <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-up stagger-3">
